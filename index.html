@@ -62,7 +62,11 @@
     /* Section heading accent */
     .section-heading span { border-bottom:3px solid var(--red); padding-bottom:4px; }
     /* Hero overlay */
-    .hero-overlay { background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,.82) 100%); }
+    .hero-overlay { background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,.82) 100%); z-index:1; }
+    /* Hero background slideshow + zoom in/out (Ken Burns) */
+    .hero-bg { animation: heroZoom 14s ease-in-out infinite; transform-origin: center; will-change: transform, opacity; }
+    @keyframes heroZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    @media (prefers-reduced-motion: reduce) { .hero-bg { animation: none; } }
     /* Light mode overrides */
     html:not(.dark) body { background:#f5f5f5; color:#111; }
     html:not(.dark) nav { background:#fff; border-bottom:1px solid #e5e5e5; }
@@ -95,6 +99,7 @@
         <a href="#home" class="nav-link text-white hover:text-brand-red transition-colors">HOME</a>
         <a href="#prices" class="nav-link text-white hover:text-brand-red transition-colors">PRICES</a>
         <a href="#about" class="nav-link text-white hover:text-brand-red transition-colors">ABOUT</a>
+        <a href="#coaches" class="nav-link text-white hover:text-brand-red transition-colors">COACHES</a>
         <a href="#gallery" class="nav-link text-white hover:text-brand-red transition-colors">GALLERY</a>
         <a href="#contact" class="nav-link text-white hover:text-brand-red transition-colors">CONTACT</a>
       </div>
@@ -122,6 +127,7 @@
       <a @click="open=false" href="#home" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">HOME</a>
       <a @click="open=false" href="#prices" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">PRICES</a>
       <a @click="open=false" href="#about" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">ABOUT</a>
+      <a @click="open=false" href="#coaches" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">COACHES</a>
       <a @click="open=false" href="#gallery" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">GALLERY</a>
       <a @click="open=false" href="#contact" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">CONTACT</a>
       <div class="flex items-center gap-3 pt-2">
@@ -138,16 +144,27 @@
 </nav>
 
 <!-- ===== HERO ===== -->
-<section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
-  <img src="./img/img-1.png" alt="Hero" class="absolute inset-0 w-full h-full object-cover"/>
+<section id="home" x-data="heroSlider()" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+  <!-- Background slideshow (Alpine array) with zoom in/out -->
+  <template x-for="(img, i) in images" :key="i">
+    <img :src="img" alt="Hero background"
+         class="hero-bg absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
+         :class="current === i ? 'opacity-100' : 'opacity-0'"/>
+  </template>
   <div class="hero-overlay absolute inset-0"></div>
   <div class="relative z-10 text-center px-4 max-w-4xl mx-auto fade-up">
-    <div class="inline-block border border-brand-red px-4 py-1 text-brand-red text-xs font-bold tracking-widest mb-6 shadow-md">MUAY THAI · BALI</div>
+    <div class="inline-block border border-brand-red px-4 py-1 text-brand-red text-xs font-bold tracking-widest mb-6 shadow-md">MUAY THAI · BOXING · CONDITIONING</div>
     <h1 class="text-5xl md:text-7xl font-extrabold leading-none tracking-tight text-white mb-4 drop-shadow-lg">
       <span class="text-brand-red">KONA</span><br/>FIGHT CAMP
     </h1>
-    <p class="text-gray-300 text-lg md:text-xl font-medium mb-8 max-w-2xl mx-auto leading-relaxed">
-      Train like a warrior. Forged in discipline. <br class="hidden md:block"/>Elite Muay Thai training for all levels — Bali's premier fight camp.
+    <p class="text-white text-xl md:text-2xl font-bold mb-4 max-w-2xl mx-auto leading-relaxed">
+      Built from experience in the ring, not trends in the fitness industry.
+    </p>
+    <p class="text-gray-300 text-base md:text-lg font-medium mb-3 max-w-2xl mx-auto leading-relaxed">
+      Our coaches bring over 20 years experience fighting, training and coaching in Thailand, Australia, UK, and Indonesia.
+    </p>
+    <p class="text-gray-200 text-base md:text-lg font-semibold mb-8 max-w-2xl mx-auto leading-relaxed">
+      Made for fighters, open to everyone.
     </p>
     <div class="flex flex-wrap gap-4 justify-center">
       <a href="#prices" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md">VIEW PRICES</a>
@@ -162,10 +179,8 @@
 
 <!-- ===== STATS BAR ===== -->
 <div class="bg-brand-red py-6">
-  <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
-    <div class="fade-up"><div class="text-3xl font-extrabold">10+</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">YEARS EXPERIENCE</div></div>
-    <div class="fade-up"><div class="text-3xl font-extrabold">500+</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">STUDENTS TRAINED</div></div>
-    <div class="fade-up"><div class="text-3xl font-extrabold">5★</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">RATED CAMP</div></div>
+  <div class="max-w-2xl mx-auto px-4 grid grid-cols-2 gap-6 text-center text-white">
+    <div class="fade-up"><div class="text-3xl font-extrabold">20+</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">YEARS EXPERIENCE</div></div>
     <div class="fade-up"><div class="text-3xl font-extrabold">ALL</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">LEVELS WELCOME</div></div>
   </div>
 </div>
@@ -352,10 +367,22 @@
         <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-2"><span class="section-border-bottom pb-1">ABOUT US</span></h2>
         <div class="w-16 h-1 bg-brand-red mt-4 mb-6"></div>
         <p class="text-gray-300 leading-relaxed mb-4">
-          <strong class="text-white">Kona Fight Camp</strong> is Bali's premier Muay Thai training camp, welcoming fighters and fitness enthusiasts from around the world. Whether you're a seasoned competitor or stepping into the gym for the first time, our professional coaches will push you to your limits.
+          <strong class="text-white">Kona Fight Camp</strong> is not built around Instagram fitness trends or commercial gym culture. Our focus is authentic Muay Thai, real fight knowledge, and raising the standard of Muay Thai in Indonesia.
         </p>
-        <p class="text-gray-400 leading-relaxed mb-6">
-          Our camp offers world-class training in a supportive community environment. We cover everything from fundamentals — technique, bag work, pad work — to advanced sparring, clinching, and competition preparation.
+        <p class="text-gray-400 leading-relaxed mb-4">
+          Our coaches bring over 20 years of Muay Thai experience, having lived, trained, and competed professionally in Thailand under experienced Thai trainers.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-4">
+          We built Kona Fight Camp to create an environment with genuine athlete development pathways, catering to all levels — from complete beginners and casual practitioners to active fighters and professional athletes.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-4">
+          We follow the same structured daily training system used throughout Thailand and offer both half and full training sessions. Half sessions are designed for beginners, casual members, and those focused on fitness and technique, while full sessions include daily sparring and clinching for more experienced practitioners looking to push themselves and develop at a higher level.
+        </p>
+        <p class="text-white font-semibold leading-relaxed mb-1">
+          This is real Muay Thai, done properly.
+        </p>
+        <p class="text-brand-red font-extrabold tracking-wide leading-relaxed mb-6">
+          No gimmicks. No shortcuts.
         </p>
         <div class="grid grid-cols-2 gap-4 mb-8">
           <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
@@ -370,8 +397,8 @@
           </div>
           <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
             <i class="fa-solid fa-location-dot text-brand-red text-xl mb-2"></i>
-            <div class="text-white font-bold text-sm">Bali Based</div>
-            <div class="text-gray-400 text-xs mt-1">Heart of the island — easy to find</div>
+            <div class="text-white font-bold text-sm">North Canggu, Bali</div>
+            <div class="text-gray-400 text-xs mt-1">Train in the heart of Canggu</div>
           </div>
           <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
             <i class="fa-solid fa-clock text-brand-red text-xl mb-2"></i>
@@ -390,6 +417,39 @@
   </div>
 </section>
 
+<!-- ===== COACHES ===== -->
+<section id="coaches" class="py-20 bg-brand-dark">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="section-heading mb-12 fade-up">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">THE TEAM</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-white"><span>MEET RICO</span></h2>
+      <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <!-- Rico photos: replace ./img/rico-1..3.jpeg with real photos of Rico. Each falls back to an existing photo until you add the files. -->
+      <div class="fade-up grid grid-cols-2 gap-4">
+        <img src="./img/rico-1.jpeg" onerror="this.onerror=null;this.src='./img/img2.jpeg'" alt="Rico — Head Coach at Kona Fight Camp" class="col-span-2 w-full h-72 object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/rico-2.jpeg" onerror="this.onerror=null;this.src='./img/img3.jpeg'" alt="Rico training Muay Thai" class="w-full h-44 object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/rico-3.jpeg" onerror="this.onerror=null;this.src='./img/img4.jpeg'" alt="Rico coaching at Kona Fight Camp" class="w-full h-44 object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+      <div class="fade-up">
+        <p class="text-brand-red text-xs font-bold tracking-widest mb-3">HEAD COACH</p>
+        <h3 class="text-3xl font-extrabold text-white mb-4">Rico</h3>
+        <!-- TODO: replace with Rico's full bio -->
+        <p class="text-gray-300 leading-relaxed mb-4">
+          Rico leads the coaching at Kona Fight Camp. Our coaches bring over 20 years of Muay Thai experience, having lived, trained, and competed professionally in Thailand under experienced Thai trainers.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-6">
+          His sessions follow the same structured daily training system used throughout Thailand — building real fight knowledge and technique for everyone from complete beginners to professional athletes.
+        </p>
+        <a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20train%20with%20Rico" target="_blank" class="btn-red px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp"></i> TRAIN WITH RICO
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== GALLERY ===== -->
 <section id="gallery" class="py-20 bg-[#0a0a0a]">
   <div class="max-w-7xl mx-auto px-4">
@@ -400,29 +460,23 @@
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
       <div class="fade-up col-span-2 md:col-span-2 row-span-1">
-        <img src="./img/img-1.png" alt="Gallery 1" class="w-full h-full md:h-72 object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/img1.jpeg" alt="Gallery 1" class="w-full h-full md:h-72 object-cover shadow-md border border-brand-border card-hover"/>
       </div>
       <div class="fade-up">
-        <img src="./img/img-2.png" alt="Gallery 2" class="w-full h-full md:h-72 object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/img2.jpeg" alt="Gallery 2" class="w-full h-full md:h-72 object-cover shadow-md border border-brand-border card-hover"/>
       </div>
       <div class="fade-up">
-        <img src="./img/img-3.png" alt="Gallery 3" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/img3.jpeg" alt="Gallery 3" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
       </div>
       <div class="fade-up">
-        <img src="./img/img-4.png" alt="Gallery 4" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/img4.jpeg" alt="Gallery 4" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
       </div>
       <div class="fade-up">
-        <img src="./img/img-5.png" alt="Gallery 5" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
-      </div>
-      <div class="fade-up">
-        <img src="./img/img-6.png" alt="Gallery 6" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
-      </div>
-      <div class="fade-up">
-        <img src="./img/img-1.png" alt="Gallery 7" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="./img/img5.jpeg" alt="Gallery 5" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
       </div>
     </div>
     <div class="text-center mt-8 fade-up">
-      <a href="https://www.instagram.com/konagymbali" target="_blank" class="btn-outline px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+      <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="btn-outline px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
         <i class="fa-brands fa-instagram text-brand-red"></i> MORE ON INSTAGRAM
       </a>
     </div>
@@ -444,14 +498,14 @@
           <i class="fa-solid fa-location-dot text-brand-red text-xl mt-1"></i>
           <div>
             <div class="text-white font-bold mb-1">ADDRESS</div>
-            <div class="text-gray-400 text-sm leading-relaxed">Kona Fight Camp, Bali, Indonesia</div>
+            <a href="https://www.google.com/maps/search/?api=1&query=Kona+Fight+Camp+North+Canggu+Bali" target="_blank" class="text-gray-400 text-sm leading-relaxed hover:text-brand-red transition-colors cursor-pointer">Kona Fight Camp, North Canggu, Bali, Indonesia</a>
           </div>
         </div>
         <div class="bg-[#111111] p-6 border border-brand-border shadow-md flex gap-4 items-start">
           <i class="fa-brands fa-instagram text-brand-red text-xl mt-1"></i>
           <div>
             <div class="text-white font-bold mb-1">INSTAGRAM</div>
-            <a href="https://www.instagram.com/konagymbali" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">@konagymbali</a>
+            <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">@konafightcamp</a>
           </div>
         </div>
         <div class="bg-[#111111] p-6 border border-brand-border shadow-md flex gap-4 items-start">
@@ -461,10 +515,10 @@
             <a href="https://wa.me/628112500225" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">+62 811-2500-225</a>
           </div>
         </div>
-        <div class="bg-[#111111] p-6 border border-brand-border shadow-md">
-          <img src="./img/img-1.png" alt="Map Placeholder" class="w-full h-40 object-cover shadow-md border border-brand-border"/>
-          <div class="text-gray-400 text-xs mt-2 text-center">Find us in Bali — contact us for directions</div>
-        </div>
+        <a href="https://www.google.com/maps/search/?api=1&query=Kona+Fight+Camp+North+Canggu+Bali" target="_blank" class="block bg-[#111111] p-6 border border-brand-border shadow-md card-hover cursor-pointer">
+          <img src="./img/img-1.png" alt="Kona Fight Camp location — North Canggu, Bali" class="w-full h-40 object-cover shadow-md border border-brand-border"/>
+          <div class="text-brand-red text-xs mt-3 text-center font-semibold tracking-widest hover:underline"><i class="fa-solid fa-location-dot mr-1"></i> VIEW ON GOOGLE MAPS — NORTH CANGGU, BALI</div>
+        </a>
       </div>
       <!-- Contact Form -->
       <div class="fade-up">
@@ -503,7 +557,7 @@
           <img src="https://easysyntax.github.io/placeholders/Square%20Post%201080%20x%201080.svg" alt="Logo" class="h-10 w-10 object-cover"/>
           <span class="font-extrabold text-lg text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
         </div>
-        <p class="text-gray-500 text-sm leading-relaxed">Elite Muay Thai training in the heart of Bali. All levels welcome.</p>
+        <p class="text-gray-500 text-sm leading-relaxed">Muay Thai • Boxing • Conditioning. Authentic. Affordable. Serious training.<br/><span class="inline-flex items-center gap-1 mt-2"><i class="fa-solid fa-location-dot text-brand-red"></i> North Canggu, Bali</span></p>
       </div>
       <div>
         <div class="text-white font-bold text-xs tracking-widest mb-4 section-border-bottom pb-2">QUICK LINKS</div>
@@ -518,7 +572,7 @@
       <div>
         <div class="text-white font-bold text-xs tracking-widest mb-4 section-border-bottom pb-2">FOLLOW US</div>
         <div class="flex gap-4">
-          <a href="https://www.instagram.com/konagymbali" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
+          <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
             <i class="fa-brands fa-instagram"></i>
           </a>
           <a href="https://wa.me/628112500225" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
@@ -567,6 +621,17 @@ function googleTranslateElementInit() {
 <script>
   function app() {
     return { darkMode: true }
+  }
+
+  // Hero background slideshow (img1–img5) with crossfade; zoom in/out handled by CSS
+  function heroSlider() {
+    return {
+      images: ['./img/img1.jpeg', './img/img2.jpeg', './img/img3.jpeg', './img/img4.jpeg', './img/img5.jpeg'],
+      current: 0,
+      init() {
+        setInterval(() => { this.current = (this.current + 1) % this.images.length; }, 5000);
+      }
+    }
   }
 
   function contactForm() {
