@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" :class="darkMode ? 'dark' : ''" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Success — Kona Fight Camp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./assets/theme.css" />
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' } } } } };
+  </script>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-brand-dark border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../img/logo.png" alt="Kona Fight Camp" class="h-12 w-9 object-cover shadow-md" />
+      <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="../index.html" class="hidden sm:inline-flex items-center gap-1 font-semibold text-gray-300 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i> Back to site</a>
+      <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md" title="Toggle theme">
+        <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 pt-28 pb-20" x-data="successPage()">
+
+  <!-- ===== STEP INDICATOR ===== -->
+  <div class="steps max-w-2xl mx-auto mb-12">
+    <div class="step done"><div class="step-num"><i class="fa-solid fa-check"></i></div><div class="step-txt hidden sm:block">Register</div></div>
+    <div class="step-line done"></div>
+    <div class="step done"><div class="step-num"><i class="fa-solid fa-check"></i></div><div class="step-txt hidden sm:block">Payment</div></div>
+    <div class="step-line done"></div>
+    <div class="step done"><div class="step-num"><i class="fa-solid fa-check"></i></div><div class="step-txt hidden sm:block">Confirm</div></div>
+    <div class="step-line done"></div>
+    <div class="step active"><div class="step-num"><i class="fa-solid fa-flag-checkered"></i></div><div class="step-txt hidden sm:block">Done</div></div>
+  </div>
+
+  <!-- ===== SUCCESS CARD ===== -->
+  <div class="text-center fade-up">
+    <div class="w-20 h-20 mx-auto bg-brand-red flex items-center justify-center shadow-md mb-6">
+      <i class="fa-solid fa-check text-white text-3xl"></i>
+    </div>
+    <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-3">Confirmation received!</h1>
+    <p class="text-gray-400 text-sm max-w-xl mx-auto">Thanks <span class="text-white font-semibold" x-text="reg ? reg.member.name : 'fighter'"></span> — we've got your payment confirmation. Our team will verify it and activate your membership, usually within <span class="text-white font-semibold">1×24 hours</span>.</p>
+  </div>
+
+  <!-- ===== RECEIPT ===== -->
+  <div class="bg-brand-card border border-brand-border shadow-md mt-10 fade-up" x-show="reg">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-brand-border">
+      <div class="text-brand-red text-xs font-bold tracking-widest">MEMBERSHIP RECEIPT</div>
+      <span class="badge badge-amber"><i class="fa-solid fa-clock mr-1"></i> Pending verification</span>
+    </div>
+    <div class="p-6 space-y-3 text-sm" x-show="reg">
+      <div class="flex justify-between gap-4 py-2 border-b border-brand-border">
+        <span class="text-gray-400">Member ID</span>
+        <span class="text-white font-bold" x-text="reg ? reg.memberId : ''"></span>
+      </div>
+      <div class="flex justify-between gap-4 py-2 border-b border-brand-border">
+        <span class="text-gray-400">Name</span>
+        <span class="text-white font-semibold" x-text="reg ? reg.member.name : ''"></span>
+      </div>
+      <div class="flex justify-between gap-4 py-2 border-b border-brand-border">
+        <span class="text-gray-400">Email</span>
+        <span class="text-white font-semibold" x-text="reg ? reg.member.email : ''"></span>
+      </div>
+      <div class="flex justify-between gap-4 py-2 border-b border-brand-border">
+        <span class="text-gray-400">Membership</span>
+        <span class="text-white font-semibold" x-text="reg ? reg.plan.name + ' (' + (reg.tier==='tourist' ? 'Tourist' : 'Local') + ')' : ''"></span>
+      </div>
+      <div class="flex justify-between gap-4 py-2 border-b border-brand-border">
+        <span class="text-gray-400">Payment method</span>
+        <span class="text-white font-semibold" x-text="reg ? (reg.paymentMethod || '—') : ''"></span>
+      </div>
+      <div class="flex justify-between gap-4 py-2">
+        <span class="text-gray-400">Amount</span>
+        <span class="text-brand-red font-extrabold text-base" x-text="reg ? formatRp(reg.plan.price) : ''"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NEXT STEPS ===== -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 fade-up">
+    <div class="bg-brand-card border border-brand-border p-5 text-center">
+      <i class="fa-solid fa-1 text-brand-red text-lg mb-2"></i>
+      <div class="text-white font-bold text-sm mb-1">We verify</div>
+      <div class="text-gray-400 text-xs">Our team checks your transfer.</div>
+    </div>
+    <div class="bg-brand-card border border-brand-border p-5 text-center">
+      <i class="fa-solid fa-2 text-brand-red text-lg mb-2"></i>
+      <div class="text-white font-bold text-sm mb-1">You're notified</div>
+      <div class="text-gray-400 text-xs">Confirmation via email / WhatsApp.</div>
+    </div>
+    <div class="bg-brand-card border border-brand-border p-5 text-center">
+      <i class="fa-solid fa-3 text-brand-red text-lg mb-2"></i>
+      <div class="text-white font-bold text-sm mb-1">Start training</div>
+      <div class="text-gray-400 text-xs">Show your member ID at the camp.</div>
+    </div>
+  </div>
+
+  <!-- ===== ACTIONS ===== -->
+  <div class="flex flex-wrap gap-4 justify-center mt-10 fade-up">
+    <a href="./dashboard.html" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+      <i class="fa-solid fa-gauge"></i> GO TO MY DASHBOARD
+    </a>
+    <a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp%2C%20I%20just%20submitted%20my%20membership%20payment" target="_blank" class="btn-outline px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+      <i class="fa-brands fa-whatsapp"></i> MESSAGE US
+    </a>
+  </div>
+  <p class="text-gray-500 text-xs text-center mt-6">Need help? WhatsApp us at <a href="https://wa.me/628112500225" class="text-brand-red hover:underline">+62 811-2500-225</a></p>
+</main>
+
+<footer class="bg-[#050505] border-t border-brand-border py-8">
+  <div class="max-w-5xl mx-auto px-4 text-center text-gray-600 text-xs">
+    &copy; 2025 Kona Fight Camp · Elite Muay Thai in Bali · <a href="../index.html" class="text-brand-red hover:underline">konafightcamp.com</a>
+  </div>
+</footer>
+
+<script src="./assets/app.js"></script>
+</body>
+</html>

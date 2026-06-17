@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" :class="darkMode ? 'dark' : ''" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Login — Kona Fight Camp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./assets/theme.css" />
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' } } } } };
+  </script>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-brand-dark border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../img/logo.png" alt="Kona Fight Camp" class="h-12 w-9 object-cover shadow-md" />
+      <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="../index.html" class="hidden sm:inline-flex items-center gap-1 font-semibold text-gray-300 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i> Back to site</a>
+      <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md" title="Toggle theme">
+        <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="min-h-screen flex items-center justify-center px-4 pt-24 pb-16">
+  <div class="w-full max-w-md fade-up" x-data="loginForm()">
+    <div class="text-center mb-8">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">MEMBER AREA</p>
+      <h1 class="text-3xl font-extrabold text-white">Welcome back</h1>
+      <div class="w-16 h-1 bg-brand-red mt-3 mx-auto"></div>
+    </div>
+
+    <div class="bg-brand-card border border-brand-border p-8 shadow-md">
+      <form @submit.prevent="submit()" class="space-y-5">
+        <div>
+          <label class="lbl">Email</label>
+          <input x-model="email" type="email" class="input" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="lbl">Password</label>
+          <div class="relative">
+            <input x-model="password" :type="show ? 'text' : 'password'" class="input pr-12" placeholder="••••••••" />
+            <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-brand-red">
+              <i :class="show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-2 text-gray-400"><input type="checkbox" class="w-4 h-4 accent-brand-red" /> Remember me</label>
+          <a href="#" class="text-brand-red hover:underline">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn-red w-full py-3 font-bold text-sm tracking-widest shadow-md flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> LOGIN
+        </button>
+      </form>
+
+      <div class="flex items-center gap-3 my-6">
+        <div class="flex-1 h-px bg-brand-border"></div>
+        <span class="text-gray-600 text-xs">OR</span>
+        <div class="flex-1 h-px bg-brand-border"></div>
+      </div>
+      <a href="https://wa.me/628112500225" target="_blank" class="btn-dark w-full py-3 font-bold text-sm tracking-widest shadow-md flex items-center justify-center gap-2">
+        <i class="fa-brands fa-whatsapp text-green-500"></i> LOGIN HELP VIA WHATSAPP
+      </a>
+    </div>
+
+    <p class="text-center text-gray-400 text-sm mt-6">Not a member yet? <a href="./register.html" class="text-brand-red font-semibold hover:underline">Join now</a></p>
+  </div>
+</main>
+
+<script src="./assets/app.js"></script>
+</body>
+</html>

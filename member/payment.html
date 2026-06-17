@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" :class="darkMode ? 'dark' : ''" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment — Kona Fight Camp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./assets/theme.css" />
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' } } } } };
+  </script>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-brand-dark border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../img/logo.png" alt="Kona Fight Camp" class="h-12 w-9 object-cover shadow-md" />
+      <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="../index.html" class="hidden sm:inline-flex items-center gap-1 font-semibold text-gray-300 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i> Back to site</a>
+      <a href="./login.html" class="font-semibold text-white hover:text-brand-red transition-colors">Login</a>
+      <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md" title="Toggle theme">
+        <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 pt-28 pb-20" x-data="paymentPage()">
+
+  <!-- ===== STEP INDICATOR ===== -->
+  <div class="steps max-w-2xl mx-auto mb-12">
+    <div class="step done"><div class="step-num"><i class="fa-solid fa-check"></i></div><div class="step-txt hidden sm:block">Register</div></div>
+    <div class="step-line done"></div>
+    <div class="step active"><div class="step-num">2</div><div class="step-txt hidden sm:block">Payment</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">3</div><div class="step-txt hidden sm:block">Confirm</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">4</div><div class="step-txt hidden sm:block">Done</div></div>
+  </div>
+
+  <div class="mb-10 fade-up">
+    <p class="text-brand-red text-xs font-bold tracking-widest mb-2">STEP 2</p>
+    <h1 class="text-3xl md:text-4xl font-extrabold text-white">Choose how to pay</h1>
+    <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    <p class="text-gray-400 text-sm mt-4 max-w-2xl">Transfer the exact total to one of the accounts below, then continue to upload your proof of payment.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- ===== METHODS ===== -->
+    <div class="lg:col-span-2 space-y-8">
+      <!-- Local banks -->
+      <section class="fade-up">
+        <h2 class="text-white font-extrabold text-base flex items-center gap-2 mb-4"><i class="fa-solid fa-flag text-brand-red"></i> Local bank transfer (Indonesia)</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <template x-for="b in localBanks" :key="b.id">
+            <div @click="select(b)" class="method-card p-4 flex flex-col items-center justify-center text-center gap-2 h-24" :class="method && method.id === b.id ? 'selected' : ''">
+              <i :class="b.icon" class="text-brand-red text-xl"></i>
+              <span class="text-white font-bold text-sm" x-text="b.name"></span>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- International -->
+      <section class="fade-up">
+        <h2 class="text-white font-extrabold text-base flex items-center gap-2 mb-4"><i class="fa-solid fa-globe text-brand-red"></i> International payment</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <template x-for="m in intl" :key="m.id">
+            <div @click="select(m)" class="method-card p-4 flex items-center gap-3" :class="method && method.id === m.id ? 'selected' : ''">
+              <i :class="m.icon" class="text-brand-red text-xl w-6 text-center"></i>
+              <div>
+                <div class="text-white font-bold text-sm" x-text="m.name"></div>
+                <div class="text-gray-500 text-xs" x-text="m.tag"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- Selected method details -->
+      <section class="fade-up" x-show="method" x-transition>
+        <div class="bg-brand-card border border-brand-border shadow-md">
+          <div class="flex items-center gap-3 px-5 py-4 border-b border-brand-border">
+            <i :class="method ? method.icon : ''" class="text-brand-red text-lg"></i>
+            <div>
+              <div class="text-white font-bold text-sm" x-text="method ? method.name : ''"></div>
+              <div class="text-gray-500 text-xs" x-text="method ? method.tag : ''"></div>
+            </div>
+          </div>
+
+          <div class="p-5">
+            <!-- QRIS -->
+            <template x-if="method && method.qr">
+              <div class="flex flex-col items-center text-center py-2">
+                <div class="bg-white p-3 inline-block"><img :src="method.qr" alt="QRIS" class="w-44 h-44 object-contain" /></div>
+                <p class="text-gray-400 text-xs mt-3">Scan with GoPay, OVO, DANA, ShopeePay or any mobile bank.</p>
+              </div>
+            </template>
+
+            <!-- Account fields -->
+            <template x-if="method && !method.qr">
+              <div class="space-y-3">
+                <template x-for="f in method.fields" :key="f[0]">
+                  <div class="flex items-center justify-between gap-3 bg-brand-dark border border-brand-border px-4 py-3">
+                    <div class="min-w-0">
+                      <div class="text-gray-500 text-[0.65rem] font-semibold tracking-widest uppercase" x-text="f[0]"></div>
+                      <div class="text-white font-bold text-sm truncate" x-text="f[1]"></div>
+                    </div>
+                    <button @click="copy(f[1], method.id + f[0])" class="btn-outline px-3 py-2 text-xs font-bold tracking-widest shrink-0">
+                      <span x-show="copied !== method.id + f[0]"><i class="fa-regular fa-copy mr-1"></i> COPY</span>
+                      <span x-show="copied === method.id + f[0]" class="text-brand-red"><i class="fa-solid fa-check mr-1"></i> COPIED</span>
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <div class="mt-5 bg-brand-dark border border-brand-border p-4 flex items-start gap-3">
+              <i class="fa-solid fa-circle-info text-brand-red mt-0.5"></i>
+              <p class="text-gray-400 text-xs leading-relaxed">Transfer the <span class="text-white font-semibold">exact amount</span> shown in the summary. Keep your receipt / screenshot — you'll upload it on the next step so we can verify your membership.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== SUMMARY ===== -->
+    <div class="lg:col-span-1">
+      <div class="bg-brand-card border border-brand-border p-6 shadow-md price-card lg:sticky lg:top-24">
+        <div class="text-brand-red text-xs font-bold tracking-widest mb-4">ORDER SUMMARY</div>
+        <template x-if="reg">
+          <div>
+            <div class="py-2 border-b border-brand-border">
+              <div class="text-gray-500 text-xs">Member</div>
+              <div class="text-white font-semibold text-sm" x-text="reg.member.name"></div>
+            </div>
+            <div class="flex justify-between items-start gap-3 py-2 border-b border-brand-border">
+              <div>
+                <div class="text-white font-semibold text-sm" x-text="reg.plan.name"></div>
+                <div class="text-gray-500 text-xs" x-text="(reg.tier==='tourist' ? 'Tourist' : 'Indonesian local') + ' rate'"></div>
+              </div>
+              <div class="text-white font-bold text-sm whitespace-nowrap" x-text="formatRp(reg.plan.price)"></div>
+            </div>
+            <div class="flex justify-between items-center py-3">
+              <span class="text-gray-400 text-xs font-semibold tracking-widest">TOTAL</span>
+              <span class="text-brand-red font-extrabold text-lg" x-text="formatRp(reg.plan.price)"></span>
+            </div>
+            <div class="text-gray-500 text-xs mb-4">Paying via <span class="text-white font-semibold" x-text="method ? method.name : '—'"></span></div>
+          </div>
+        </template>
+        <button @click="proceed()" class="btn-red w-full py-3 font-bold text-sm tracking-widest shadow-md flex items-center justify-center gap-2">
+          I'VE TRANSFERRED <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <a href="./register.html" class="block text-center text-gray-500 text-xs mt-3 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left mr-1"></i> Back to details</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-[#050505] border-t border-brand-border py-8">
+  <div class="max-w-5xl mx-auto px-4 text-center text-gray-600 text-xs">
+    &copy; 2025 Kona Fight Camp · Elite Muay Thai in Bali · <a href="../index.html" class="text-brand-red hover:underline">konafightcamp.com</a>
+  </div>
+</footer>
+
+<script src="./assets/app.js"></script>
+</body>
+</html>

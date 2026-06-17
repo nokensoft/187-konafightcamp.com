@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" :class="darkMode ? 'dark' : ''" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Dashboard — Kona Fight Camp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./assets/theme.css" />
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' } } } } };
+  </script>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300" x-data="dashboard()">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-brand-dark border-b border-brand-border">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../img/logo.png" alt="Kona Fight Camp" class="h-12 w-9 object-cover shadow-md" />
+      <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="../index.html" class="hidden sm:inline-flex items-center gap-1 font-semibold text-gray-300 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i> Back to site</a>
+      <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md" title="Toggle theme">
+        <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+      </button>
+      <button @click="logout()" class="btn-outline px-4 py-2 text-xs font-bold tracking-widest shadow-md"><i class="fa-solid fa-right-from-bracket mr-1"></i> LOGOUT</button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-20">
+
+  <!-- ===== HEADER ===== -->
+  <div class="flex items-center justify-between flex-wrap gap-4 mb-8 fade-up">
+    <div>
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-1">MEMBER DASHBOARD</p>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-white">Hi, <span x-text="memberName"></span> <span class="text-brand-red">👊</span></h1>
+    </div>
+    <a href="./register.html" class="btn-red px-6 py-3 font-bold text-xs tracking-widest shadow-md inline-flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> EXTEND / NEW PLAN
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- ===== LEFT: MEMBERSHIP CARD + HISTORY ===== -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Membership card -->
+      <div class="relative overflow-hidden bg-brand-card border border-brand-border shadow-md fade-up">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-red opacity-10 rotate-45"></div>
+        <div class="p-6">
+          <div class="flex items-start justify-between mb-8">
+            <div>
+              <div class="text-gray-500 text-xs font-semibold tracking-widest">MEMBERSHIP</div>
+              <div class="text-white font-extrabold text-xl mt-1" x-text="planName"></div>
+            </div>
+            <div>
+              <span class="badge badge-green" x-show="status === 'active'"><i class="fa-solid fa-circle-check mr-1"></i> Active</span>
+              <span class="badge badge-amber" x-show="status === 'pending'"><i class="fa-solid fa-clock mr-1"></i> Pending</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div>
+              <div class="text-gray-500 text-xs">Member ID</div>
+              <div class="text-white font-bold text-sm" x-text="memberId"></div>
+            </div>
+            <div>
+              <div class="text-gray-500 text-xs">Access</div>
+              <div class="text-white font-bold text-sm"><i class="fa-solid fa-infinity text-brand-red mr-1"></i> Unlimited</div>
+            </div>
+            <div>
+              <div class="text-gray-500 text-xs">Valid until</div>
+              <div class="text-white font-bold text-sm" x-text="validUntil"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-brand-dark border-t border-brand-border px-6 py-3 text-xs text-gray-500 flex items-center justify-between">
+          <span><i class="fa-solid fa-location-dot text-brand-red mr-1"></i> Kona Fight Camp · Bali</span>
+          <span class="text-white font-semibold tracking-widest">MUAY THAI</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 fade-up">
+        <div class="bg-brand-card border border-brand-border p-4 text-center">
+          <div class="text-brand-red text-2xl font-extrabold">12</div>
+          <div class="text-gray-400 text-xs mt-1">Sessions this month</div>
+        </div>
+        <div class="bg-brand-card border border-brand-border p-4 text-center">
+          <div class="text-brand-red text-2xl font-extrabold">38</div>
+          <div class="text-gray-400 text-xs mt-1">Total check-ins</div>
+        </div>
+        <div class="bg-brand-card border border-brand-border p-4 text-center">
+          <div class="text-brand-red text-2xl font-extrabold">5</div>
+          <div class="text-gray-400 text-xs mt-1">Day streak</div>
+        </div>
+      </div>
+
+      <!-- Payment history -->
+      <div class="bg-brand-card border border-brand-border shadow-md fade-up">
+        <div class="px-6 py-4 border-b border-brand-border flex items-center justify-between">
+          <h2 class="text-white font-extrabold text-sm tracking-widest">PAYMENT HISTORY</h2>
+          <i class="fa-solid fa-receipt text-brand-red"></i>
+        </div>
+        <div class="divide-y divide-brand-border">
+          <!-- Latest (from registration) -->
+          <template x-if="reg">
+            <div class="flex items-center justify-between px-6 py-4">
+              <div>
+                <div class="text-white font-semibold text-sm" x-text="planName"></div>
+                <div class="text-gray-500 text-xs" x-text="(reg.paymentMethod || 'Bank transfer') + ' · ' + memberId"></div>
+              </div>
+              <div class="text-right">
+                <div class="text-white font-bold text-sm" x-text="formatRp(planPrice)"></div>
+                <span class="badge badge-amber mt-1" x-show="status === 'pending'">Pending</span>
+                <span class="badge badge-green mt-1" x-show="status === 'active'">Paid</span>
+              </div>
+            </div>
+          </template>
+          <!-- Sample previous records -->
+          <div class="flex items-center justify-between px-6 py-4">
+            <div>
+              <div class="text-white font-semibold text-sm">1 Month Unlimited</div>
+              <div class="text-gray-500 text-xs">BCA Transfer · 12 May 2025</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-bold text-sm">Rp 1.600.000</div>
+              <span class="badge badge-green mt-1">Paid</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between px-6 py-4">
+            <div>
+              <div class="text-white font-semibold text-sm">5 Sessions (2hr)</div>
+              <div class="text-gray-500 text-xs">PayPal · 28 Apr 2025</div>
+            </div>
+            <div class="text-right">
+              <div class="text-white font-bold text-sm">Rp 850.000</div>
+              <span class="badge badge-green mt-1">Paid</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== RIGHT: CHECK-IN QR + PROFILE ===== -->
+    <div class="space-y-6">
+      <!-- Check-in QR -->
+      <div class="bg-brand-card border border-brand-border shadow-md p-6 text-center fade-up">
+        <h2 class="text-white font-extrabold text-sm tracking-widest mb-4">CHECK-IN QR</h2>
+        <div class="bg-white p-3 inline-block">
+          <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + memberId" alt="Check-in QR" class="w-40 h-40 object-contain" />
+        </div>
+        <p class="text-gray-400 text-xs mt-4">Show this at the front desk to check in for your session.</p>
+      </div>
+
+      <!-- Profile -->
+      <div class="bg-brand-card border border-brand-border shadow-md fade-up">
+        <div class="px-6 py-4 border-b border-brand-border flex items-center justify-between">
+          <h2 class="text-white font-extrabold text-sm tracking-widest">PROFILE</h2>
+          <i class="fa-solid fa-user text-brand-red"></i>
+        </div>
+        <div class="p-6 space-y-3 text-sm">
+          <div class="flex justify-between gap-4">
+            <span class="text-gray-400">Name</span>
+            <span class="text-white font-semibold text-right" x-text="memberName"></span>
+          </div>
+          <div class="flex justify-between gap-4">
+            <span class="text-gray-400">Email</span>
+            <span class="text-white font-semibold text-right" x-text="reg && reg.member ? reg.member.email : 'member@example.com'"></span>
+          </div>
+          <div class="flex justify-between gap-4">
+            <span class="text-gray-400">Phone</span>
+            <span class="text-white font-semibold text-right" x-text="reg && reg.member ? reg.member.phone : '+62 8xx xxxx'"></span>
+          </div>
+          <button class="btn-dark w-full py-2.5 font-bold text-xs tracking-widest shadow-md mt-2"><i class="fa-solid fa-pen mr-1"></i> EDIT PROFILE</button>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <a href="https://wa.me/628112500225" target="_blank" class="block bg-brand-card border border-brand-border shadow-md p-5 text-center hover:border-brand-red transition-colors fade-up">
+        <i class="fa-brands fa-whatsapp text-green-500 text-2xl mb-2"></i>
+        <div class="text-white font-bold text-sm">Need help?</div>
+        <div class="text-gray-400 text-xs">Chat with us on WhatsApp</div>
+      </a>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-[#050505] border-t border-brand-border py-8">
+  <div class="max-w-6xl mx-auto px-4 text-center text-gray-600 text-xs">
+    &copy; 2025 Kona Fight Camp · Elite Muay Thai in Bali · <a href="../index.html" class="text-brand-red hover:underline">konafightcamp.com</a>
+  </div>
+</footer>
+
+<script src="./assets/app.js"></script>
+</body>
+</html>

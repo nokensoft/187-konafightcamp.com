@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" :class="darkMode ? 'dark' : ''" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm Payment — Kona Fight Camp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./assets/theme.css" />
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' } } } } };
+  </script>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-brand-dark border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../img/logo.png" alt="Kona Fight Camp" class="h-12 w-9 object-cover shadow-md" />
+      <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="../index.html" class="hidden sm:inline-flex items-center gap-1 font-semibold text-gray-300 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i> Back to site</a>
+      <a href="./login.html" class="font-semibold text-white hover:text-brand-red transition-colors">Login</a>
+      <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md" title="Toggle theme">
+        <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 pt-28 pb-20" x-data="confirmationForm()">
+
+  <!-- ===== STEP INDICATOR ===== -->
+  <div class="steps max-w-2xl mx-auto mb-12">
+    <div class="step done"><div class="step-num"><i class="fa-solid fa-check"></i></div><div class="step-txt hidden sm:block">Register</div></div>
+    <div class="step-line done"></div>
+    <div class="step done"><div class="step-num"><i class="fa-solid fa-check"></i></div><div class="step-txt hidden sm:block">Payment</div></div>
+    <div class="step-line done"></div>
+    <div class="step active"><div class="step-num">3</div><div class="step-txt hidden sm:block">Confirm</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">4</div><div class="step-txt hidden sm:block">Done</div></div>
+  </div>
+
+  <div class="mb-10 fade-up">
+    <p class="text-brand-red text-xs font-bold tracking-widest mb-2">STEP 3</p>
+    <h1 class="text-3xl md:text-4xl font-extrabold text-white">Confirm your payment</h1>
+    <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    <p class="text-gray-400 text-sm mt-4 max-w-2xl">Already transferred? Upload your proof of payment so our team can verify and activate your membership.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- ===== FORM ===== -->
+    <div class="lg:col-span-2 bg-brand-card border border-brand-border p-6 shadow-md fade-up">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="lbl">Sender / account name *</label>
+          <input x-model="form.sender" type="text" class="input" placeholder="Name on the account you transferred from" />
+        </div>
+        <div>
+          <label class="lbl">Transferred from (bank / method)</label>
+          <input x-model="form.fromBank" type="text" class="input" placeholder="e.g. BCA, Wise, PayPal" />
+        </div>
+        <div>
+          <label class="lbl">Amount transferred</label>
+          <input x-model.number="form.amount" type="number" class="input" placeholder="0" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="lbl">Transfer date &amp; time</label>
+          <input x-model="form.date" type="datetime-local" class="input" />
+        </div>
+
+        <!-- Upload -->
+        <div class="sm:col-span-2">
+          <label class="lbl">Proof of transfer * <span class="text-gray-600 normal-case tracking-normal">(image or PDF)</span></label>
+          <label for="proof" class="block border border-dashed border-brand-border bg-brand-dark hover:border-brand-red transition-colors cursor-pointer p-6 text-center">
+            <template x-if="!preview">
+              <div>
+                <i class="fa-solid fa-cloud-arrow-up text-brand-red text-2xl mb-2"></i>
+                <div class="text-white text-sm font-semibold" x-text="fileName || 'Click to upload your receipt'"></div>
+                <div class="text-gray-500 text-xs mt-1">PNG, JPG or PDF · max ~5MB</div>
+              </div>
+            </template>
+            <template x-if="preview">
+              <div class="flex flex-col items-center">
+                <img :src="preview" alt="Proof preview" class="max-h-48 object-contain border border-brand-border" />
+                <div class="text-gray-400 text-xs mt-2" x-text="fileName"></div>
+                <div class="text-brand-red text-xs mt-1 font-semibold">Click to change</div>
+              </div>
+            </template>
+          </label>
+          <input @change="onFile($event)" id="proof" type="file" accept="image/*,application/pdf" class="hidden" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="lbl">Note (optional)</label>
+          <textarea x-model="form.note" rows="3" class="input resize-none" placeholder="Anything we should know about this payment…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SUMMARY ===== -->
+    <div class="lg:col-span-1">
+      <div class="bg-brand-card border border-brand-border p-6 shadow-md price-card lg:sticky lg:top-24">
+        <div class="text-brand-red text-xs font-bold tracking-widest mb-4">YOU'RE PAYING FOR</div>
+        <template x-if="reg">
+          <div>
+            <div class="py-2 border-b border-brand-border">
+              <div class="text-gray-500 text-xs">Member</div>
+              <div class="text-white font-semibold text-sm" x-text="reg.member.name"></div>
+            </div>
+            <div class="py-2 border-b border-brand-border">
+              <div class="text-gray-500 text-xs">Membership</div>
+              <div class="text-white font-semibold text-sm" x-text="reg.plan.name"></div>
+            </div>
+            <div class="py-2 border-b border-brand-border">
+              <div class="text-gray-500 text-xs">Method</div>
+              <div class="text-white font-semibold text-sm" x-text="reg.paymentMethod || '—'"></div>
+            </div>
+            <div class="flex justify-between items-center py-3">
+              <span class="text-gray-400 text-xs font-semibold tracking-widest">TOTAL</span>
+              <span class="text-brand-red font-extrabold text-lg" x-text="formatRp(reg.plan.price)"></span>
+            </div>
+          </div>
+        </template>
+        <button @click="submit()" class="btn-red w-full py-3 font-bold text-sm tracking-widest shadow-md flex items-center justify-center gap-2">
+          <i class="fa-solid fa-paper-plane"></i> SUBMIT CONFIRMATION
+        </button>
+        <a href="./payment.html" class="block text-center text-gray-500 text-xs mt-3 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left mr-1"></i> Back to payment</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-[#050505] border-t border-brand-border py-8">
+  <div class="max-w-5xl mx-auto px-4 text-center text-gray-600 text-xs">
+    &copy; 2025 Kona Fight Camp · Elite Muay Thai in Bali · <a href="../index.html" class="text-brand-red hover:underline">konafightcamp.com</a>
+  </div>
+</footer>
+
+<script src="./assets/app.js"></script>
+</body>
+</html>

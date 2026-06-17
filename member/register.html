@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" :class="darkMode ? 'dark' : ''" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — Kona Fight Camp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./assets/theme.css" />
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }, colors: { brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' } } } } };
+  </script>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-brand-dark border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../img/logo.png" alt="Kona Fight Camp" class="h-12 w-9 object-cover shadow-md" />
+      <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="../index.html" class="hidden sm:inline-flex items-center gap-1 font-semibold text-gray-300 hover:text-brand-red transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i> Back to site</a>
+      <a href="./login.html" class="font-semibold text-white hover:text-brand-red transition-colors">Login</a>
+      <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md" title="Toggle theme">
+        <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 pt-28 pb-20" x-data="registerForm()">
+
+  <!-- ===== STEP INDICATOR ===== -->
+  <div class="steps max-w-2xl mx-auto mb-12">
+    <div class="step active"><div class="step-num">1</div><div class="step-txt hidden sm:block">Register</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">2</div><div class="step-txt hidden sm:block">Payment</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">3</div><div class="step-txt hidden sm:block">Confirm</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">4</div><div class="step-txt hidden sm:block">Done</div></div>
+  </div>
+
+  <!-- ===== HEADING ===== -->
+  <div class="mb-10 fade-up">
+    <p class="text-brand-red text-xs font-bold tracking-widest mb-2">BECOME A MEMBER</p>
+    <h1 class="text-3xl md:text-4xl font-extrabold text-white">Join Kona Fight Camp</h1>
+    <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    <p class="text-gray-400 text-sm mt-4 max-w-2xl">Pick a membership, fill in your details, then pay by local Indonesian bank transfer or an international method. Manual confirmation — our team verifies within 1×24 hours.</p>
+  </div>
+
+  <!-- ===== 1. CHOOSE PLAN ===== -->
+  <section class="mb-12 fade-up">
+    <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+      <h2 class="text-white font-extrabold text-lg flex items-center gap-2"><span class="badge badge-red">1</span> Choose your membership</h2>
+      <!-- Tier toggle -->
+      <div class="flex gap-2">
+        <button type="button" @click="setTier('tourist')" :class="tier==='tourist' ? 'btn-red' : 'btn-outline'" class="px-4 py-2 text-xs font-bold tracking-widest shadow-md">
+          <i class="fa-solid fa-globe mr-1"></i> TOURIST
+        </button>
+        <button type="button" @click="setTier('local')" :class="tier==='local' ? 'btn-red' : 'btn-outline'" class="px-4 py-2 text-xs font-bold tracking-widest shadow-md">
+          <i class="fa-solid fa-flag mr-1"></i> INDONESIAN
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <template x-for="p in currentPlans" :key="p.id">
+        <div @click="selectedId = p.id" class="plan-card p-5 relative" :class="selectedId === p.id ? 'selected' : ''">
+          <div class="absolute top-3 right-3 flex gap-1">
+            <span x-show="p.popular" class="badge badge-red">Popular</span>
+            <span x-show="p.best" class="badge badge-green">Best value</span>
+          </div>
+          <div class="flex items-center gap-2 mb-3 text-brand-red"><i class="fa-solid fa-infinity"></i><span class="text-xs font-bold tracking-widest">UNLIMITED</span></div>
+          <div class="text-white font-bold text-sm mb-1" x-text="p.name"></div>
+          <div class="flex items-baseline gap-1 mb-4">
+            <span class="text-2xl font-extrabold text-white" x-text="formatRp(p.price)"></span>
+            <span class="text-gray-400 text-xs" x-text="p.period"></span>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-semibold" :class="selectedId === p.id ? 'text-brand-red' : 'text-gray-500'">
+            <i class="fa-solid" :class="selectedId === p.id ? 'fa-circle-check' : 'fa-circle'"></i>
+            <span x-text="selectedId === p.id ? 'Selected' : 'Select'"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+  </section>
+
+  <!-- ===== 2. MEMBER DETAILS ===== -->
+  <section class="fade-up">
+    <h2 class="text-white font-extrabold text-lg flex items-center gap-2 mb-6"><span class="badge badge-red">2</span> Your details</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Form -->
+      <div class="lg:col-span-2 bg-brand-card border border-brand-border p-6 shadow-md">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <label class="lbl">Full name *</label>
+            <input x-model="form.name" type="text" class="input" placeholder="e.g. John Doe" />
+          </div>
+          <div>
+            <label class="lbl">Email *</label>
+            <input x-model="form.email" type="email" class="input" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label class="lbl">Phone / WhatsApp *</label>
+            <input x-model="form.phone" type="text" class="input" placeholder="+62 8xx xxxx xxxx" />
+          </div>
+          <div>
+            <label class="lbl">Gender</label>
+            <select x-model="form.gender" class="input">
+              <option value="">Select…</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Date of birth</label>
+            <input x-model="form.dob" type="date" class="input" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="lbl">Address</label>
+            <input x-model="form.address" type="text" class="input" placeholder="City / hotel / area in Bali" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="lbl">Emergency contact</label>
+            <input x-model="form.emergency" type="text" class="input" placeholder="Name & phone number" />
+          </div>
+          <div class="sm:col-span-2 flex items-start gap-3 pt-1">
+            <input x-model="form.agree" id="agree" type="checkbox" class="mt-1 w-4 h-4 accent-brand-red" />
+            <label for="agree" class="text-gray-400 text-xs leading-relaxed">I agree to the <a href="#" class="text-brand-red hover:underline">terms &amp; conditions</a> and the camp's training waiver, and I confirm the details above are correct.</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-brand-card border border-brand-border p-6 shadow-md price-card lg:sticky lg:top-24">
+          <div class="text-brand-red text-xs font-bold tracking-widest mb-4">ORDER SUMMARY</div>
+          <template x-if="selected">
+            <div>
+              <div class="flex justify-between items-start gap-3 py-2 border-b border-brand-border">
+                <div>
+                  <div class="text-white font-semibold text-sm" x-text="selected.name"></div>
+                  <div class="text-gray-500 text-xs" x-text="(tier==='tourist' ? 'Tourist' : 'Indonesian local') + ' rate'"></div>
+                </div>
+                <div class="text-white font-bold text-sm whitespace-nowrap" x-text="formatRp(selected.price)"></div>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-gray-400 text-xs font-semibold tracking-widest">TOTAL</span>
+                <span class="text-brand-red font-extrabold text-lg" x-text="formatRp(selected.price)"></span>
+              </div>
+            </div>
+          </template>
+          <template x-if="!selected">
+            <p class="text-gray-500 text-sm py-4">No plan selected yet. Choose a membership above.</p>
+          </template>
+          <button @click="submit()" :disabled="!selected" class="btn-red w-full py-3 font-bold text-sm tracking-widest shadow-md mt-2 flex items-center justify-center gap-2">
+            CONTINUE TO PAYMENT <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <p class="text-gray-500 text-xs text-center mt-3"><i class="fa-solid fa-lock mr-1"></i> No charge yet — you'll get transfer details next.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-[#050505] border-t border-brand-border py-8">
+  <div class="max-w-5xl mx-auto px-4 text-center text-gray-600 text-xs">
+    &copy; 2025 Kona Fight Camp · Elite Muay Thai in Bali · <a href="../index.html" class="text-brand-red hover:underline">konafightcamp.com</a>
+  </div>
+</footer>
+
+<script src="./assets/app.js"></script>
+</body>
+</html>
