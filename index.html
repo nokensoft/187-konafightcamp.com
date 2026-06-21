@@ -85,8 +85,23 @@
 </head>
 <body class="bg-brand-dark text-white transition-colors duration-300">
 
+<!-- ===== DISCLAIMER TOPBAR ===== -->
+<div x-show="showDisclaimer"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 -translate-y-full"
+     class="fixed top-0 left-0 right-0 z-[70] bg-amber-400 text-black py-2 px-10 flex items-center justify-center text-xs font-semibold tracking-wide text-center">
+  <i class="fa-solid fa-triangle-exclamation mr-2 flex-shrink-0"></i>
+  <span>This website is currently under development. Some features may be incomplete or subject to change.</span>
+  <button @click="showDisclaimer = false"
+          class="absolute right-4 top-1/2 -translate-y-1/2 text-black hover:opacity-60 transition-opacity cursor-pointer"
+          title="Dismiss">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
 <!-- ===== NAVBAR ===== -->
-<nav id="navbar" x-data="{ open: false }" class="fixed top-0 left-0 right-0 z-50 bg-brand-dark border-b border-brand-border transition-all duration-300">
+<nav id="navbar" x-data="{ open: false }" class="fixed left-0 right-0 z-50 bg-brand-dark border-b border-brand-border transition-all duration-300" :class="showDisclaimer ? 'top-9' : 'top-0'">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
       <!-- Logo -->
@@ -623,7 +638,7 @@ function googleTranslateElementInit() {
 
 <script>
   function app() {
-    return { darkMode: true }
+    return { darkMode: true, showDisclaimer: true }
   }
 
   // Hero background slideshow (img1–img5) with crossfade; zoom in/out handled by CSS
