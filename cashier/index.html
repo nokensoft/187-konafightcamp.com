@@ -31,51 +31,20 @@
                 <p class="text-zinc-400 text-sm mt-1 pl-1">Multi-Unit POS</p>
             </div>
 
-            <!-- Units -->
+            <!-- Per-unit navigation -->
             <div class="px-6 pt-8">
-                <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-3">Units</div>
-                <div class="space-y-2">
-                    <template x-for="u in unitKeys" :key="u">
-                        <button @click="activeUnit = u"
-                                :class="{ 'bg-red-50 text-red-700 border-red-200': activeUnit === u }"
-                                class="w-full text-left flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-zinc-50 transition-all border border-transparent">
-                            <i class="fa-solid text-2xl" :class="unitInfo[u].icon"></i>
-                            <div>
-                                <div class="font-semibold" x-text="unitInfo[u].label"></div>
-                                <div class="text-xs text-zinc-500" x-text="unitInfo[u].tag"></div>
-                            </div>
-                        </button>
-                    </template>
+                <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-3">
+                    <span x-text="unitInfo[activeUnit].label"></span> Navigation
                 </div>
-            </div>
-
-            <div class="mt-10 px-6">
-                <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-3">Navigation</div>
                 <nav class="space-y-1 px-3">
-                    <a @click.prevent="activeTab = 'dashboard'"
-                       :class="{ 'bg-zinc-100': activeTab === 'dashboard' }"
-                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
-                        <i class="fa-solid fa-house w-5"></i>
-                        <span class="font-medium">Dashboard</span>
-                    </a>
-                    <a @click.prevent="activeTab = 'pos'"
-                       :class="{ 'bg-zinc-100': activeTab === 'pos' }"
-                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
-                        <i class="fa-solid fa-cash-register w-5"></i>
-                        <span class="font-medium">POS Terminal</span>
-                    </a>
-                    <a @click.prevent="activeTab = 'members'"
-                       :class="{ 'bg-zinc-100': activeTab === 'members' }"
-                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
-                        <i class="fa-solid fa-users w-5"></i>
-                        <span class="font-medium">Members</span>
-                    </a>
-                    <a @click.prevent="activeTab = 'inventory'"
-                       :class="{ 'bg-zinc-100': activeTab === 'inventory' }"
-                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
-                        <i class="fa-solid fa-boxes-stacked w-5"></i>
-                        <span class="font-medium">Inventory</span>
-                    </a>
+                    <template x-for="n in unitNav" :key="n.tab">
+                        <a @click.prevent="activeTab = n.tab"
+                           :class="{ 'bg-zinc-100': activeTab === n.tab }"
+                           class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
+                            <i class="fa-solid w-5" :class="n.icon"></i>
+                            <span class="font-medium" x-text="n.label"></span>
+                        </a>
+                    </template>
                 </nav>
             </div>
 
@@ -96,9 +65,14 @@
                 <div class="flex items-center gap-8">
                     <h1 class="text-2xl font-semibold tracking-tight" x-text="pageTitle"></h1>
 
-                    <div x-show="activeTab === 'pos' || activeTab === 'inventory'" class="flex bg-zinc-100 rounded-3xl p-1 text-sm font-medium">
+                    <div class="flex bg-zinc-100 rounded-3xl p-1 text-sm font-medium">
                         <template x-for="u in unitKeys" :key="u">
-                            <button @click="activeUnit = u" class="px-7 py-2 rounded-3xl transition-all" :class="{ 'bg-white shadow': activeUnit === u }" x-text="unitInfo[u].label"></button>
+                            <button @click="activeUnit = u"
+                                    class="px-6 py-2 rounded-3xl transition-all flex items-center gap-2"
+                                    :class="activeUnit === u ? 'bg-white shadow text-red-600' : 'text-zinc-500 hover:text-zinc-700'">
+                                <i class="fa-solid" :class="unitInfo[u].icon"></i>
+                                <span x-text="unitInfo[u].label"></span>
+                            </button>
                         </template>
                     </div>
                 </div>
@@ -153,21 +127,21 @@
                             <div class="bg-white rounded-3xl p-7 shadow-sm">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="text-zinc-500 text-sm">Active Members</p>
-                                        <p class="text-4xl font-semibold mt-3" x-text="members.length"></p>
+                                        <p class="text-zinc-500 text-sm" x-text="activeUnit === 'gym' ? 'Active Members' : 'Total Items'"></p>
+                                        <p class="text-4xl font-semibold mt-3" x-text="activeUnit === 'gym' ? members.length : itemCount(activeUnit)"></p>
                                     </div>
                                     <div class="text-blue-500">
-                                        <i class="fa-solid fa-user-plus text-4xl"></i>
+                                        <i class="fa-solid text-4xl" :class="activeUnit === 'gym' ? 'fa-user-plus' : 'fa-box'"></i>
                                     </div>
                                 </div>
-                                <p class="text-xs text-zinc-400 mt-6">Across all gym packages</p>
+                                <p class="text-xs text-zinc-400 mt-6" x-text="activeUnit === 'gym' ? 'Across all gym packages' : (unitInfo[activeUnit].label + ' catalog')"></p>
                             </div>
 
                             <div class="bg-white rounded-3xl p-7 shadow-sm">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <p class="text-zinc-500 text-sm">Transactions</p>
-                                        <p class="text-4xl font-semibold mt-3" x-text="transactions.length"></p>
+                                        <p class="text-4xl font-semibold mt-3" x-text="unitTransactions.length"></p>
                                     </div>
                                     <div class="text-amber-500">
                                         <i class="fa-solid fa-receipt text-4xl"></i>
@@ -180,7 +154,10 @@
                         <div class="col-span-12 lg:col-span-4 bg-white rounded-3xl p-7 shadow-sm">
                             <h3 class="font-semibold mb-5">Recent Activity</h3>
                             <div class="space-y-5 text-sm">
-                                <template x-for="t in transactions" :key="t.id">
+                                <template x-if="unitTransactions.length === 0">
+                                    <div class="text-zinc-300 text-sm py-6 text-center">No activity yet</div>
+                                </template>
+                                <template x-for="t in unitTransactions" :key="t.id">
                                     <div class="flex justify-between">
                                         <div>
                                             <span class="font-medium" x-text="t.id"></span>
@@ -196,33 +173,31 @@
                         </div>
                     </div>
 
-                    <!-- Units overview (sample data summary) -->
+                    <!-- Active unit overview -->
                     <div>
-                        <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-1">Units Overview</div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <template x-for="u in unitKeys" :key="u">
-                                <div @click="activeUnit = u; activeTab = 'pos'" class="bg-white rounded-3xl p-7 shadow-sm cursor-pointer hover:shadow-md transition">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
-                                            <i class="fa-solid" :class="unitInfo[u].icon"></i>
-                                        </div>
-                                        <div>
-                                            <div class="font-semibold text-lg" x-text="unitInfo[u].label"></div>
-                                            <div class="text-xs text-zinc-400" x-text="unitInfo[u].tag"></div>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-8 mt-6 text-sm">
-                                        <div>
-                                            <div class="text-2xl font-semibold" x-text="itemCount(u)"></div>
-                                            <div class="text-zinc-400 text-xs">Items</div>
-                                        </div>
-                                        <div>
-                                            <div class="text-2xl font-semibold" x-text="catCount(u)"></div>
-                                            <div class="text-zinc-400 text-xs">Categories</div>
-                                        </div>
-                                    </div>
+                        <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-1">
+                            <span x-text="unitInfo[activeUnit].label"></span> Overview
+                        </div>
+                        <div @click="activeTab = 'inventory'" class="bg-white rounded-3xl p-7 shadow-sm cursor-pointer hover:shadow-md transition max-w-sm">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
+                                    <i class="fa-solid" :class="unitInfo[activeUnit].icon"></i>
                                 </div>
-                            </template>
+                                <div>
+                                    <div class="font-semibold text-lg" x-text="unitInfo[activeUnit].label"></div>
+                                    <div class="text-xs text-zinc-400" x-text="unitInfo[activeUnit].tag"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-8 mt-6 text-sm">
+                                <div>
+                                    <div class="text-2xl font-semibold" x-text="itemCount(activeUnit)"></div>
+                                    <div class="text-zinc-400 text-xs">Items</div>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-semibold" x-text="catCount(activeUnit)"></div>
+                                    <div class="text-zinc-400 text-xs">Categories</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -368,11 +343,16 @@
                                 <div @click="activeCategory = null"
                                      class="px-5 py-4 rounded-2xl text-sm cursor-pointer transition-colors"
                                      :class="!activeCategory ? 'bg-red-50 text-red-700 font-medium' : 'bg-zinc-50 hover:bg-zinc-100'">All Items</div>
-                                <template x-for="cat in unitCategories" :key="cat">
-                                    <div @click="selectCategory(cat)"
-                                         class="px-5 py-4 rounded-2xl text-sm cursor-pointer transition-colors"
-                                         :class="activeCategory === cat ? 'bg-red-50 text-red-700 font-medium' : 'bg-zinc-50 hover:bg-zinc-100'"
-                                         x-text="cat"></div>
+                                <template x-for="cat in unitCategories" :key="cat.name">
+                                    <div @click="selectCategory(cat.name)"
+                                         class="group px-5 py-4 rounded-2xl text-sm cursor-pointer transition-colors"
+                                         :class="activeCategory === cat.name ? 'bg-red-50 text-red-700 font-medium' : 'bg-zinc-50 hover:bg-zinc-100'">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span x-text="cat.name"></span>
+                                            <i @click.stop="openCategoryModal(cat)" class="fa-solid fa-pen text-xs text-zinc-300 hover:text-red-500 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                        <div x-show="cat.description" class="text-xs font-normal text-zinc-400 mt-1 leading-snug" x-text="cat.description"></div>
+                                    </div>
                                 </template>
                             </div>
                             <button @click="openCategoryModal()" class="text-red-600 text-sm mt-6 flex items-center gap-1"><i class="fa-solid fa-plus"></i> New Category</button>
@@ -456,8 +436,8 @@
                         <input x-model="itemModal.name" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Name">
                         <input x-model.number="itemModal.price" type="number" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Price">
                         <select x-model="itemModal.cat" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
-                            <template x-for="c in unitCategories" :key="c">
-                                <option x-text="c"></option>
+                            <template x-for="c in unitCategories" :key="c.name">
+                                <option :value="c.name" x-text="c.name"></option>
                             </template>
                         </select>
                         <input x-model.number="itemModal.stock" type="number" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Stock">
@@ -470,17 +450,18 @@
             </div>
         </div>
 
-        <!-- New Category -->
+        <!-- New / Edit Category -->
         <div x-show="categoryModal.open" x-cloak x-transition.opacity
              @click.self="categoryModal.open = false" @keydown.escape.window="categoryModal.open = false"
              class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div x-show="categoryModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
                 <div class="p-8">
-                    <h3 class="font-semibold text-xl mb-6">New Category</h3>
+                    <h3 class="font-semibold text-xl mb-6" x-text="categoryModal.editingName ? 'Edit Category' : 'New Category'"></h3>
                     <input x-model="categoryModal.name" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Category name">
+                    <input x-model="categoryModal.description" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300 mt-4" placeholder="Category description">
                     <div class="mt-8 flex gap-4">
                         <button @click="categoryModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50">Cancel</button>
-                        <button @click="saveCategory()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700">Add Category</button>
+                        <button @click="saveCategory()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700" x-text="categoryModal.editingName ? 'Save Changes' : 'Add Category'"></button>
                     </div>
                 </div>
             </div>
@@ -551,6 +532,26 @@
                     kitchen: { label: 'Kitchen', tag: 'F&B',        icon: 'fa-utensils' }
                 },
 
+                // ---- per-unit sidebar navigation ----
+                navConfig: {
+                    gym: [
+                        { tab: 'dashboard', label: 'Dashboard',    icon: 'fa-house' },
+                        { tab: 'pos',       label: 'POS Terminal', icon: 'fa-cash-register' },
+                        { tab: 'members',   label: 'Members',      icon: 'fa-users' },
+                        { tab: 'inventory', label: 'Packages',     icon: 'fa-layer-group' }
+                    ],
+                    store: [
+                        { tab: 'dashboard', label: 'Dashboard',    icon: 'fa-house' },
+                        { tab: 'pos',       label: 'POS Terminal', icon: 'fa-cash-register' },
+                        { tab: 'inventory', label: 'Products',     icon: 'fa-boxes-stacked' }
+                    ],
+                    kitchen: [
+                        { tab: 'dashboard', label: 'Dashboard',    icon: 'fa-house' },
+                        { tab: 'pos',       label: 'POS Terminal', icon: 'fa-cash-register' },
+                        { tab: 'inventory', label: 'Menu',         icon: 'fa-utensils' }
+                    ]
+                },
+
                 // ---- data loaded from /data/*.json ----
                 units: { gym: null, store: null, kitchen: null },
 
@@ -565,14 +566,17 @@
                 // ---- modal state ----
                 memberModal:   { open: false, name: '', type: 'Local', package: '' },
                 itemModal:     { open: false, editingId: null, name: '', price: '', cat: '', stock: '' },
-                categoryModal: { open: false, name: '' },
+                categoryModal: { open: false, editingName: null, name: '', description: '' },
                 confirmModal:  { open: false, title: '', message: '', memberId: null },
                 checkoutModal: { open: false, total: '', ref: '' },
 
                 // ---- lifecycle ----
                 async init() {
                     await this.loadData();
-                    this.$watch('activeUnit', () => { this.activeCategory = null; });
+                    this.$watch('activeUnit', () => {
+                        this.activeCategory = null;
+                        if (!this.unitNav.some(n => n.tab === this.activeTab)) this.activeTab = 'dashboard';
+                    });
                 },
 
                 async loadData() {
@@ -588,6 +592,7 @@
                             load('gym'), load('store'), load('kitchen')
                         ]);
                         this.units = { gym, store, kitchen };
+                        this.normalizeCategories();
                     } catch (e) {
                         this.loadError = `${e.message}. If you opened this file directly (file://), serve it over HTTP instead — e.g. run "npx serve" or "python -m http.server" inside the cashier folder, then open the page from the local server.`;
                         console.error('Data load failed:', e);
@@ -596,6 +601,23 @@
                     }
                 },
 
+                // normalize categories to objects { name, description } (supports legacy string arrays)
+                normalizeCategories() {
+                    this.unitKeys.forEach(u => {
+                        const unit = this.units[u];
+                        if (unit && Array.isArray(unit.categories)) {
+                            unit.categories = unit.categories.map(c =>
+                                typeof c === 'string'
+                                    ? { name: c, description: '' }
+                                    : { name: c.name, description: c.description || '' }
+                            );
+                        }
+                    });
+                },
+
+                // ---- computed: navigation ----
+                get unitNav() { return this.navConfig[this.activeUnit] || []; },
+
                 // ---- computed: current unit data ----
                 get currentUnit() { return this.units[this.activeUnit] || { catalog: [], categories: [], members: [] }; },
                 get catalog() { return this.currentUnit.catalog || []; },
@@ -603,7 +625,11 @@
                 get members() { return (this.units.gym && this.units.gym.members) || []; },
                 get itemNoun() { return this.activeUnit === 'store' ? 'Product' : this.activeUnit === 'kitchen' ? 'Menu Item' : 'Package'; },
                 get pageTitle() {
-                    return { dashboard: 'Dashboard', pos: 'Point of Sale', members: 'Members', inventory: 'Inventory' }[this.activeTab] || 'FitHub';
+                    if (this.activeTab === 'inventory') {
+                        const nav = this.unitNav.find(n => n.tab === 'inventory');
+                        return nav ? nav.label : 'Inventory';
+                    }
+                    return { dashboard: 'Dashboard', pos: 'Point of Sale', members: 'Members' }[this.activeTab] || 'FitHub';
                 },
                 get membershipPackages() {
                     const names = ((this.units.gym && this.units.gym.catalog) || []).map(i => i.name);
@@ -627,7 +653,11 @@
                 },
 
                 // ---- computed: dashboard stats ----
-                get totalRevenue() { return this.transactions.reduce((s, t) => s + (t.amount || 0), 0); },
+                get unitTransactions() {
+                    const label = this.unitInfo[this.activeUnit].label;
+                    return this.transactions.filter(t => t.unit === label);
+                },
+                get totalRevenue() { return this.unitTransactions.reduce((s, t) => s + (t.amount || 0), 0); },
                 itemCount(u) { return ((this.units[u] || {}).catalog || []).length; },
                 catCount(u) { return ((this.units[u] || {}).categories || []).length; },
 
@@ -701,7 +731,7 @@
                     if (item) {
                         this.itemModal = { open: true, editingId: item.id, name: item.name, price: item.price, cat: item.cat, stock: item.stock };
                     } else {
-                        this.itemModal = { open: true, editingId: null, name: '', price: '', cat: this.unitCategories[0] || 'General', stock: '' };
+                        this.itemModal = { open: true, editingId: null, name: '', price: '', cat: (this.unitCategories[0] && this.unitCategories[0].name) || 'General', stock: '' };
                     }
                 },
                 saveItem() {
@@ -730,12 +760,33 @@
                 },
 
                 // ---- category actions ----
-                openCategoryModal() { this.categoryModal = { open: true, name: '' }; },
+                openCategoryModal(cat = null) {
+                    if (cat) {
+                        this.categoryModal = { open: true, editingName: cat.name, name: cat.name, description: cat.description || '' };
+                    } else {
+                        this.categoryModal = { open: true, editingName: null, name: '', description: '' };
+                    }
+                },
                 saveCategory() {
                     const name = (this.categoryModal.name || '').trim();
                     if (!name) return;
+                    const description = (this.categoryModal.description || '').trim();
                     if (!this.currentUnit.categories) this.currentUnit.categories = [];
-                    if (!this.currentUnit.categories.includes(name)) this.currentUnit.categories.push(name);
+                    const cats = this.currentUnit.categories;
+                    if (this.categoryModal.editingName) {
+                        const existing = cats.find(c => c.name === this.categoryModal.editingName);
+                        if (existing) {
+                            const oldName = existing.name;
+                            existing.name = name;
+                            existing.description = description;
+                            if (oldName !== name) {
+                                this.catalog.forEach(i => { if (i.cat === oldName) i.cat = name; });
+                                if (this.activeCategory === oldName) this.activeCategory = name;
+                            }
+                        }
+                    } else if (!cats.some(c => c.name === name)) {
+                        cats.push({ name, description });
+                    }
                     this.categoryModal.open = false;
                 },
                 selectCategory(cat) { this.activeCategory = (this.activeCategory === cat ? null : cat); },

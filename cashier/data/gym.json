@@ -3,7 +3,11 @@
   "label": "Gym",
   "tagline": "Membership",
   "icon": "fa-dumbbell",
-  "categories": ["Membership", "Personal Training", "Class Pass"],
+  "categories": [
+    { "name": "Membership", "description": "Paket keanggotaan akses gym berulang" },
+    { "name": "Personal Training", "description": "Sesi latihan privat bersama pelatih" },
+    { "name": "Class Pass", "description": "Tiket kelas seperti Muay Thai dan Yoga" }
+  ],
   "catalog": [
     { "id": 1, "name": "Monthly Premium", "cat": "Membership", "price": 450000, "stock": 999, "emoji": "🏋️" },
     { "id": 2, "name": "Quarterly Membership", "cat": "Membership", "price": 1200000, "stock": 999, "emoji": "🗓️" },

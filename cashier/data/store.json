@@ -3,7 +3,12 @@
   "label": "Store",
   "tagline": "Equipment",
   "icon": "fa-bag-shopping",
-  "categories": ["Supplement", "Equipment", "Apparel", "Accessories"],
+  "categories": [
+    { "name": "Supplement", "description": "Nutrisi dan suplemen pendukung latihan" },
+    { "name": "Equipment", "description": "Perlengkapan dan alat latihan" },
+    { "name": "Apparel", "description": "Pakaian dan atribut olahraga" },
+    { "name": "Accessories", "description": "Aksesori penunjang aktivitas" }
+  ],
   "catalog": [
     { "id": 101, "name": "Whey Protein 1kg", "cat": "Supplement", "price": 289000, "stock": 34, "emoji": "🥤" },
     { "id": 102, "name": "BCAA 300g", "cat": "Supplement", "price": 195000, "stock": 21, "emoji": "💊" },

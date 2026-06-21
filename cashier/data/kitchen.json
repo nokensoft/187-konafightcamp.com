@@ -3,7 +3,12 @@
   "label": "Kitchen",
   "tagline": "F&B",
   "icon": "fa-utensils",
-  "categories": ["Smoothie", "Main", "Snack", "Beverage"],
+  "categories": [
+    { "name": "Smoothie", "description": "Minuman buah blender menyehatkan" },
+    { "name": "Main", "description": "Menu utama tinggi protein" },
+    { "name": "Snack", "description": "Camilan ringan bergizi" },
+    { "name": "Beverage", "description": "Aneka minuman segar" }
+  ],
   "catalog": [
     { "id": 201, "name": "Banana Smoothie", "cat": "Smoothie", "price": 45000, "stock": 48, "emoji": "🍌" },
     { "id": 202, "name": "Berry Blast Smoothie", "cat": "Smoothie", "price": 52000, "stock": 40, "emoji": "🍓" },
