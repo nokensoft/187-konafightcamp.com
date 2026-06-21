@@ -1,0 +1,24 @@
+{
+  "unit": "gym",
+  "label": "Gym",
+  "tagline": "Membership",
+  "icon": "fa-dumbbell",
+  "categories": ["Membership", "Personal Training", "Class Pass"],
+  "catalog": [
+    { "id": 1, "name": "Monthly Premium", "cat": "Membership", "price": 450000, "stock": 999, "emoji": "🏋️" },
+    { "id": 2, "name": "Quarterly Membership", "cat": "Membership", "price": 1200000, "stock": 999, "emoji": "🗓️" },
+    { "id": 3, "name": "Annual Membership", "cat": "Membership", "price": 4200000, "stock": 999, "emoji": "💳" },
+    { "id": 4, "name": "Day Pass", "cat": "Membership", "price": 75000, "stock": 999, "emoji": "🎟️" },
+    { "id": 5, "name": "Personal Training (1 Session)", "cat": "Personal Training", "price": 250000, "stock": 999, "emoji": "🤸" },
+    { "id": 6, "name": "PT Package (10 Sessions)", "cat": "Personal Training", "price": 2250000, "stock": 999, "emoji": "💪" },
+    { "id": 7, "name": "Muay Thai Class", "cat": "Class Pass", "price": 120000, "stock": 999, "emoji": "🥊" },
+    { "id": 8, "name": "Yoga Class", "cat": "Class Pass", "price": 90000, "stock": 999, "emoji": "🧘" }
+  ],
+  "members": [
+    { "id": "MB001", "name": "Budi Santoso", "package": "Monthly Premium", "type": "Local", "expiry": "15 Aug 2026" },
+    { "id": "MB002", "name": "Mia Thompson", "package": "Quarterly Membership", "type": "Tourist", "expiry": "02 Jul 2026" },
+    { "id": "MB003", "name": "Andi Wijaya", "package": "Annual Membership", "type": "Local", "expiry": "20 Jan 2027" },
+    { "id": "MB004", "name": "Sarah Connor", "package": "Monthly Premium", "type": "Tourist", "expiry": "28 Jun 2026" },
+    { "id": "MB005", "name": "Rizky Pratama", "package": "PT Package (10 Sessions)", "type": "Local", "expiry": "10 Sep 2026" }
+  ]
+}

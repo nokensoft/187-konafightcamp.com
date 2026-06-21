@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashier Dashboard - Kona Fight Camp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-zinc-50 text-zinc-900">
+    <div x-data="posApp" x-cloak class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-72 bg-white border-r border-zinc-100 flex flex-col shadow-sm">
+            <div class="p-8 border-b">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl leading-none">F</div>
+                    <div class="font-semibold text-3xl tracking-tighter">FitHub</div>
+                </div>
+                <p class="text-zinc-400 text-sm mt-1 pl-1">Multi-Unit POS</p>
+            </div>
+
+            <!-- Units -->
+            <div class="px-6 pt-8">
+                <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-3">Units</div>
+                <div class="space-y-2">
+                    <template x-for="u in unitKeys" :key="u">
+                        <button @click="activeUnit = u"
+                                :class="{ 'bg-red-50 text-red-700 border-red-200': activeUnit === u }"
+                                class="w-full text-left flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-zinc-50 transition-all border border-transparent">
+                            <i class="fa-solid text-2xl" :class="unitInfo[u].icon"></i>
+                            <div>
+                                <div class="font-semibold" x-text="unitInfo[u].label"></div>
+                                <div class="text-xs text-zinc-500" x-text="unitInfo[u].tag"></div>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="mt-10 px-6">
+                <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-3">Navigation</div>
+                <nav class="space-y-1 px-3">
+                    <a @click.prevent="activeTab = 'dashboard'"
+                       :class="{ 'bg-zinc-100': activeTab === 'dashboard' }"
+                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
+                        <i class="fa-solid fa-house w-5"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                    <a @click.prevent="activeTab = 'pos'"
+                       :class="{ 'bg-zinc-100': activeTab === 'pos' }"
+                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
+                        <i class="fa-solid fa-cash-register w-5"></i>
+                        <span class="font-medium">POS Terminal</span>
+                    </a>
+                    <a @click.prevent="activeTab = 'members'"
+                       :class="{ 'bg-zinc-100': activeTab === 'members' }"
+                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
+                        <i class="fa-solid fa-users w-5"></i>
+                        <span class="font-medium">Members</span>
+                    </a>
+                    <a @click.prevent="activeTab = 'inventory'"
+                       :class="{ 'bg-zinc-100': activeTab === 'inventory' }"
+                       class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
+                        <i class="fa-solid fa-boxes-stacked w-5"></i>
+                        <span class="font-medium">Inventory</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="mt-auto p-6 border-t">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-zinc-900 text-white rounded-2xl flex items-center justify-center text-sm font-medium">JD</div>
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">John Doe</div>
+                        <div class="text-xs text-emerald-600">Cashier • On Duty</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div class="flex-1 flex flex-col">
+            <header class="h-16 bg-white border-b flex items-center px-8 justify-between">
+                <div class="flex items-center gap-8">
+                    <h1 class="text-2xl font-semibold tracking-tight" x-text="pageTitle"></h1>
+
+                    <div x-show="activeTab === 'pos' || activeTab === 'inventory'" class="flex bg-zinc-100 rounded-3xl p-1 text-sm font-medium">
+                        <template x-for="u in unitKeys" :key="u">
+                            <button @click="activeUnit = u" class="px-7 py-2 rounded-3xl transition-all" :class="{ 'bg-white shadow': activeUnit === u }" x-text="unitInfo[u].label"></button>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <div class="relative w-80">
+                        <input x-model="searchQuery"
+                               type="text"
+                               placeholder="Quick search members or products..."
+                               class="w-full bg-zinc-100 border border-transparent focus:border-red-200 rounded-3xl py-3 pl-12 outline-none text-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-5 top-3.5 text-zinc-400"></i>
+                    </div>
+
+                    <div class="flex items-center gap-5 text-zinc-400">
+                        <i class="fa-solid fa-bell text-xl cursor-pointer hover:text-zinc-600"></i>
+                        <div class="text-right text-sm">
+                            <div class="font-medium text-zinc-700">21 June 2026</div>
+                            <div class="text-emerald-500 text-xs">13:52</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-auto p-8">
+                <!-- Data load error banner -->
+                <div x-show="loadError" x-cloak class="bg-red-50 border border-red-200 text-red-700 rounded-3xl p-5 mb-6 text-sm flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <div>
+                        <div class="font-semibold mb-1">Could not load sample data</div>
+                        <div x-text="loadError"></div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD -->
+                <div x-show="activeTab === 'dashboard'" class="space-y-6">
+                    <div class="grid grid-cols-12 gap-6">
+                        <div class="col-span-12 lg:col-span-8 grid grid-cols-3 gap-6">
+                            <div class="bg-white rounded-3xl p-7 shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-zinc-500 text-sm">Total Revenue</p>
+                                        <p class="text-3xl font-semibold mt-3" x-text="formatRp(totalRevenue)"></p>
+                                    </div>
+                                    <div class="text-emerald-500">
+                                        <i class="fa-solid fa-arrow-trend-up text-4xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-emerald-600 mt-6">↑ 24% from yesterday</p>
+                            </div>
+
+                            <div class="bg-white rounded-3xl p-7 shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-zinc-500 text-sm">Active Members</p>
+                                        <p class="text-4xl font-semibold mt-3" x-text="members.length"></p>
+                                    </div>
+                                    <div class="text-blue-500">
+                                        <i class="fa-solid fa-user-plus text-4xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-zinc-400 mt-6">Across all gym packages</p>
+                            </div>
+
+                            <div class="bg-white rounded-3xl p-7 shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-zinc-500 text-sm">Transactions</p>
+                                        <p class="text-4xl font-semibold mt-3" x-text="transactions.length"></p>
+                                    </div>
+                                    <div class="text-amber-500">
+                                        <i class="fa-solid fa-receipt text-4xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-zinc-400 mt-6">Today's activity</p>
+                            </div>
+                        </div>
+
+                        <div class="col-span-12 lg:col-span-4 bg-white rounded-3xl p-7 shadow-sm">
+                            <h3 class="font-semibold mb-5">Recent Activity</h3>
+                            <div class="space-y-5 text-sm">
+                                <template x-for="t in transactions" :key="t.id">
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <span class="font-medium" x-text="t.id"></span>
+                                            <span class="text-xs text-zinc-400 ml-2" x-text="t.unit"></span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-semibold" x-text="formatRp(t.amount)"></div>
+                                            <div class="text-xs text-zinc-400" x-text="t.time"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Units overview (sample data summary) -->
+                    <div>
+                        <div class="uppercase text-xs tracking-widest text-zinc-400 font-medium mb-3 px-1">Units Overview</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <template x-for="u in unitKeys" :key="u">
+                                <div @click="activeUnit = u; activeTab = 'pos'" class="bg-white rounded-3xl p-7 shadow-sm cursor-pointer hover:shadow-md transition">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
+                                            <i class="fa-solid" :class="unitInfo[u].icon"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-lg" x-text="unitInfo[u].label"></div>
+                                            <div class="text-xs text-zinc-400" x-text="unitInfo[u].tag"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-8 mt-6 text-sm">
+                                        <div>
+                                            <div class="text-2xl font-semibold" x-text="itemCount(u)"></div>
+                                            <div class="text-zinc-400 text-xs">Items</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-2xl font-semibold" x-text="catCount(u)"></div>
+                                            <div class="text-zinc-400 text-xs">Categories</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POS -->
+                <div x-show="activeTab === 'pos'" class="grid grid-cols-12 gap-6 h-full">
+                    <!-- Menu -->
+                    <div class="col-span-7 bg-white rounded-3xl p-6 flex flex-col">
+                        <div class="mb-6">
+                            <h2 class="font-semibold text-xl" x-text="unitInfo[activeUnit].label + ' Menu'"></h2>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4 flex-1 overflow-auto auto-rows-min">
+                            <template x-if="posItems.length === 0">
+                                <div class="col-span-3 flex flex-col items-center justify-center text-zinc-300 py-20">
+                                    <i class="fa-solid fa-box-open text-5xl mb-4"></i>
+                                    <div class="text-sm">No items available</div>
+                                </div>
+                            </template>
+                            <template x-for="item in posItems" :key="item.id">
+                                <div @click="addToCart(item)" class="bg-white border rounded-3xl p-4 cursor-pointer hover:border-red-300 transition-colors">
+                                    <div class="h-28 bg-zinc-100 rounded-2xl mb-4 flex items-center justify-center text-5xl" x-text="item.emoji || '📦'"></div>
+                                    <div class="font-medium leading-tight" x-text="item.name"></div>
+                                    <div class="text-xs text-zinc-400" x-text="item.cat"></div>
+                                    <div class="mt-6 flex items-center justify-between">
+                                        <div class="text-lg font-semibold" x-text="formatRp(item.price)"></div>
+                                        <button @click.stop="addToCart(item)" class="px-5 py-2 bg-red-600 text-white text-xs rounded-2xl">Add</button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Cart -->
+                    <div class="col-span-5 bg-white rounded-3xl p-6 flex flex-col">
+                        <div class="font-semibold mb-6">Cart</div>
+
+                        <div class="flex-1 overflow-auto space-y-4">
+                            <template x-if="cart.length === 0">
+                                <div class="flex flex-col items-center justify-center text-zinc-300 py-20">
+                                    <i class="fa-solid fa-cart-shopping text-5xl mb-4"></i>
+                                    <div class="text-sm">Cart is empty</div>
+                                </div>
+                            </template>
+                            <template x-for="(item, idx) in cart" :key="item.id">
+                                <div class="flex gap-4 items-center bg-zinc-50 rounded-2xl p-4">
+                                    <div class="flex-1">
+                                        <div class="font-medium" x-text="item.name"></div>
+                                        <div class="text-xs text-zinc-400" x-text="formatRp(item.price)"></div>
+                                    </div>
+                                    <div class="flex items-center border rounded-2xl bg-white">
+                                        <button @click="cartQty(idx, -1)" class="w-8 h-8 flex items-center justify-center">-</button>
+                                        <div class="px-4 font-medium" x-text="item.qty"></div>
+                                        <button @click="cartQty(idx, 1)" class="w-8 h-8 flex items-center justify-center">+</button>
+                                    </div>
+                                    <div class="text-right w-20">
+                                        <div class="font-semibold" x-text="formatRp(item.price * item.qty)"></div>
+                                    </div>
+                                    <button @click="removeCartItem(idx)" class="text-red-300 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="pt-6 border-t mt-auto">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-zinc-500">Subtotal</span>
+                                <span class="font-medium" x-text="formatRp(subtotal)"></span>
+                            </div>
+                            <div class="flex justify-between mb-4">
+                                <span class="text-zinc-500">Tax (11%)</span>
+                                <span class="font-medium" x-text="formatRp(tax)"></span>
+                            </div>
+                            <div class="flex justify-between text-xl font-semibold border-t pt-4">
+                                <span>Total</span>
+                                <span class="text-red-600" x-text="formatRp(total)"></span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mt-8">
+                                <button @click="clearCart()" class="py-5 border border-zinc-300 hover:bg-zinc-50 rounded-3xl text-zinc-500">Clear</button>
+                                <button @click="checkout()" class="py-5 bg-red-600 hover:bg-red-700 text-white rounded-3xl font-semibold">Checkout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MEMBERS -->
+                <div x-show="activeTab === 'members'">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-3xl font-semibold">Gym Memberships</h2>
+                        <button @click="openMemberModal()" class="bg-red-600 text-white px-6 py-3.5 rounded-3xl flex items-center gap-2 hover:bg-red-700">
+                            <i class="fa-solid fa-plus"></i> New Member
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-3xl overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-zinc-50">
+                                <tr>
+                                    <th class="text-left py-5 px-8 text-xs font-medium text-zinc-500">ID</th>
+                                    <th class="text-left py-5 px-8 text-xs font-medium text-zinc-500">Name</th>
+                                    <th class="text-left py-5 px-8 text-xs font-medium text-zinc-500">Package</th>
+                                    <th class="text-left py-5 px-8 text-xs font-medium text-zinc-500">Type</th>
+                                    <th class="text-left py-5 px-8 text-xs font-medium text-zinc-500">Expires</th>
+                                    <th class="w-28"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <template x-if="filteredMembers.length === 0">
+                                    <tr><td colspan="6" class="px-8 py-12 text-center text-zinc-400">No members found</td></tr>
+                                </template>
+                                <template x-for="m in filteredMembers" :key="m.id">
+                                    <tr class="hover:bg-zinc-50">
+                                        <td class="px-8 py-5 font-medium" x-text="m.id"></td>
+                                        <td class="px-8 py-5" x-text="m.name"></td>
+                                        <td class="px-8 py-5" x-text="m.package"></td>
+                                        <td class="px-8 py-5">
+                                            <span class="px-4 py-1 text-xs rounded-3xl" :class="m.type === 'Tourist' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'" x-text="m.type"></span>
+                                        </td>
+                                        <td class="px-8 py-5 text-zinc-500" x-text="m.expiry"></td>
+                                        <td class="px-8 py-5 text-center">
+                                            <button class="text-red-500" @click="askDeleteMember(m)"><i class="fa-solid fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- INVENTORY -->
+                <div x-show="activeTab === 'inventory'">
+                    <div class="flex justify-between mb-8">
+                        <h2 class="text-3xl font-semibold" x-text="activeUnit === 'gym' ? 'Packages &amp; Categories' : activeUnit === 'store' ? 'Store Catalog' : 'Kitchen Menu'"></h2>
+                        <button @click="openItemModal()" class="bg-red-600 text-white px-7 py-3.5 rounded-3xl flex items-center gap-2 hover:bg-red-700">
+                            <i class="fa-solid fa-plus"></i> Add New
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-6">
+                        <div class="col-span-3 bg-white rounded-3xl p-6">
+                            <h3 class="font-medium mb-4">Categories</h3>
+                            <div class="space-y-3">
+                                <div @click="activeCategory = null"
+                                     class="px-5 py-4 rounded-2xl text-sm cursor-pointer transition-colors"
+                                     :class="!activeCategory ? 'bg-red-50 text-red-700 font-medium' : 'bg-zinc-50 hover:bg-zinc-100'">All Items</div>
+                                <template x-for="cat in unitCategories" :key="cat">
+                                    <div @click="selectCategory(cat)"
+                                         class="px-5 py-4 rounded-2xl text-sm cursor-pointer transition-colors"
+                                         :class="activeCategory === cat ? 'bg-red-50 text-red-700 font-medium' : 'bg-zinc-50 hover:bg-zinc-100'"
+                                         x-text="cat"></div>
+                                </template>
+                            </div>
+                            <button @click="openCategoryModal()" class="text-red-600 text-sm mt-6 flex items-center gap-1"><i class="fa-solid fa-plus"></i> New Category</button>
+                        </div>
+                        <div class="col-span-9 bg-white rounded-3xl p-6">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="text-xs text-zinc-400 border-b">
+                                        <th class="py-6 px-6 text-left">Item</th>
+                                        <th class="py-6 px-6 text-left">Category</th>
+                                        <th class="py-6 px-6 text-left">Price</th>
+                                        <th class="py-6 px-6 text-left">Stock</th>
+                                        <th class="py-6 px-6 w-28"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-if="inventoryItems.length === 0">
+                                        <tr><td colspan="5" class="px-6 py-12 text-center text-zinc-400">No items found</td></tr>
+                                    </template>
+                                    <template x-for="item in inventoryItems" :key="item.id">
+                                        <tr class="border-b last:border-none hover:bg-zinc-50">
+                                            <td class="px-6 py-6">
+                                                <span class="mr-2" x-text="item.emoji || '📦'"></span>
+                                                <span x-text="item.name"></span>
+                                            </td>
+                                            <td class="px-6 py-6 text-zinc-500" x-text="item.cat"></td>
+                                            <td class="px-6 py-6 font-medium" x-text="formatRp(item.price)"></td>
+                                            <td class="px-6 py-6" x-text="item.stock"></td>
+                                            <td class="px-6 py-6 text-center">
+                                                <i @click="openItemModal(item)" class="fa-solid fa-pen text-zinc-400 cursor-pointer hover:text-red-500"></i>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MODALS (Alpine + Tailwind) ============ -->
+
+        <!-- New / Edit Member -->
+        <div x-show="memberModal.open" x-cloak x-transition.opacity
+             @click.self="memberModal.open = false" @keydown.escape.window="memberModal.open = false"
+             class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div x-show="memberModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
+                <div class="p-8">
+                    <h3 class="text-xl font-semibold mb-6">Register New Member</h3>
+                    <div class="space-y-5">
+                        <input x-model="memberModal.name" placeholder="Full Name" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                        <div class="grid grid-cols-2 gap-4">
+                            <select x-model="memberModal.type" class="border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                                <option value="Local">Local / Indonesian</option>
+                                <option value="Tourist">Tourist</option>
+                            </select>
+                            <select x-model="memberModal.package" class="border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                                <template x-for="p in membershipPackages" :key="p">
+                                    <option x-text="p"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex gap-4">
+                        <button @click="memberModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50">Cancel</button>
+                        <button @click="saveMember()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700">Save Member</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New / Edit Item -->
+        <div x-show="itemModal.open" x-cloak x-transition.opacity
+             @click.self="itemModal.open = false" @keydown.escape.window="itemModal.open = false"
+             class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div x-show="itemModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
+                <div class="p-8">
+                    <h3 class="font-semibold text-xl mb-6" x-text="(itemModal.editingId ? 'Edit ' : 'New ') + itemNoun"></h3>
+                    <div class="space-y-4">
+                        <input x-model="itemModal.name" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Name">
+                        <input x-model.number="itemModal.price" type="number" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Price">
+                        <select x-model="itemModal.cat" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                            <template x-for="c in unitCategories" :key="c">
+                                <option x-text="c"></option>
+                            </template>
+                        </select>
+                        <input x-model.number="itemModal.stock" type="number" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Stock">
+                    </div>
+                    <div class="mt-8 flex gap-4">
+                        <button @click="itemModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50">Cancel</button>
+                        <button @click="saveItem()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700" x-text="itemModal.editingId ? 'Save Changes' : 'Add to Catalog'"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Category -->
+        <div x-show="categoryModal.open" x-cloak x-transition.opacity
+             @click.self="categoryModal.open = false" @keydown.escape.window="categoryModal.open = false"
+             class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div x-show="categoryModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
+                <div class="p-8">
+                    <h3 class="font-semibold text-xl mb-6">New Category</h3>
+                    <input x-model="categoryModal.name" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Category name">
+                    <div class="mt-8 flex gap-4">
+                        <button @click="categoryModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50">Cancel</button>
+                        <button @click="saveCategory()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700">Add Category</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete confirmation -->
+        <div x-show="confirmModal.open" x-cloak x-transition.opacity
+             @click.self="confirmModal.open = false" @keydown.escape.window="confirmModal.open = false"
+             class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div x-show="confirmModal.open" x-transition class="bg-white rounded-3xl w-full max-w-sm">
+                <div class="p-8 text-center">
+                    <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h3 class="font-semibold text-xl mb-2" x-text="confirmModal.title"></h3>
+                    <p class="text-zinc-500 mb-8" x-text="confirmModal.message"></p>
+                    <div class="flex gap-4">
+                        <button @click="confirmModal.open = false" class="flex-1 py-4 border rounded-3xl hover:bg-zinc-50">Cancel</button>
+                        <button @click="confirmDeleteMember()" class="flex-1 py-4 bg-red-600 text-white rounded-3xl hover:bg-red-700">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout success -->
+        <div x-show="checkoutModal.open" x-cloak x-transition.opacity
+             @click.self="checkoutModal.open = false" @keydown.escape.window="checkoutModal.open = false"
+             class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div x-show="checkoutModal.open" x-transition class="bg-white rounded-3xl w-full max-w-sm">
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="font-semibold text-2xl mb-2">Payment Successful</h3>
+                    <p class="text-zinc-500">Total paid</p>
+                    <p class="text-3xl font-semibold text-red-600 my-2" x-text="checkoutModal.total"></p>
+                    <p class="text-xs text-zinc-400 mb-8" x-text="checkoutModal.ref"></p>
+                    <button @click="checkoutModal.open = false" class="w-full py-4 bg-zinc-900 text-white rounded-3xl hover:bg-zinc-800">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div x-show="loading" x-cloak class="fixed inset-0 bg-white flex items-center justify-center z-[60]">
+            <div class="text-center text-zinc-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
+                <div>Loading data…</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('posApp', () => ({
+                // ---- navigation / ui state ----
+                activeTab: 'dashboard',
+                activeUnit: 'gym',
+                searchQuery: '',
+                activeCategory: null,
+                loading: true,
+                loadError: '',
+
+                // ---- static unit meta (icons/labels for sidebar & overview) ----
+                unitKeys: ['gym', 'store', 'kitchen'],
+                unitInfo: {
+                    gym:     { label: 'Gym',     tag: 'Membership', icon: 'fa-dumbbell' },
+                    store:   { label: 'Store',   tag: 'Equipment',  icon: 'fa-bag-shopping' },
+                    kitchen: { label: 'Kitchen', tag: 'F&B',        icon: 'fa-utensils' }
+                },
+
+                // ---- data loaded from /data/*.json ----
+                units: { gym: null, store: null, kitchen: null },
+
+                // ---- cart & transactions ----
+                cart: [],
+                transactions: [
+                    { id: 'TRX001', unit: 'Gym',     amount: 450000, status: 'Completed', time: '10:32' },
+                    { id: 'TRX002', unit: 'Store',   amount: 125000, status: 'Completed', time: '10:15' },
+                    { id: 'TRX003', unit: 'Kitchen', amount: 89000,  status: 'Completed', time: '09:54' }
+                ],
+
+                // ---- modal state ----
+                memberModal:   { open: false, name: '', type: 'Local', package: '' },
+                itemModal:     { open: false, editingId: null, name: '', price: '', cat: '', stock: '' },
+                categoryModal: { open: false, name: '' },
+                confirmModal:  { open: false, title: '', message: '', memberId: null },
+                checkoutModal: { open: false, total: '', ref: '' },
+
+                // ---- lifecycle ----
+                async init() {
+                    await this.loadData();
+                    this.$watch('activeUnit', () => { this.activeCategory = null; });
+                },
+
+                async loadData() {
+                    this.loading = true;
+                    this.loadError = '';
+                    try {
+                        const load = async (u) => {
+                            const res = await fetch(`data/${u}.json`, { cache: 'no-store' });
+                            if (!res.ok) throw new Error(`${u}.json returned ${res.status}`);
+                            return res.json();
+                        };
+                        const [gym, store, kitchen] = await Promise.all([
+                            load('gym'), load('store'), load('kitchen')
+                        ]);
+                        this.units = { gym, store, kitchen };
+                    } catch (e) {
+                        this.loadError = `${e.message}. If you opened this file directly (file://), serve it over HTTP instead — e.g. run "npx serve" or "python -m http.server" inside the cashier folder, then open the page from the local server.`;
+                        console.error('Data load failed:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                // ---- computed: current unit data ----
+                get currentUnit() { return this.units[this.activeUnit] || { catalog: [], categories: [], members: [] }; },
+                get catalog() { return this.currentUnit.catalog || []; },
+                get unitCategories() { return this.currentUnit.categories || []; },
+                get members() { return (this.units.gym && this.units.gym.members) || []; },
+                get itemNoun() { return this.activeUnit === 'store' ? 'Product' : this.activeUnit === 'kitchen' ? 'Menu Item' : 'Package'; },
+                get pageTitle() {
+                    return { dashboard: 'Dashboard', pos: 'Point of Sale', members: 'Members', inventory: 'Inventory' }[this.activeTab] || 'FitHub';
+                },
+                get membershipPackages() {
+                    const names = ((this.units.gym && this.units.gym.catalog) || []).map(i => i.name);
+                    return names.length ? names : ['1 Month', '3 Months', '12 Months'];
+                },
+
+                // ---- computed: filtering ----
+                matches(text) {
+                    const q = this.searchQuery.toLowerCase().trim();
+                    if (!q) return true;
+                    return (text || '').toLowerCase().includes(q);
+                },
+                get posItems() { return this.catalog.filter(i => this.matches(i.name + ' ' + i.cat)); },
+                get inventoryItems() {
+                    return this.catalog
+                        .filter(i => !this.activeCategory || i.cat === this.activeCategory)
+                        .filter(i => this.matches(i.name + ' ' + i.cat));
+                },
+                get filteredMembers() {
+                    return this.members.filter(m => this.matches(`${m.id} ${m.name} ${m.package} ${m.type}`));
+                },
+
+                // ---- computed: dashboard stats ----
+                get totalRevenue() { return this.transactions.reduce((s, t) => s + (t.amount || 0), 0); },
+                itemCount(u) { return ((this.units[u] || {}).catalog || []).length; },
+                catCount(u) { return ((this.units[u] || {}).categories || []).length; },
+
+                // ---- computed: cart totals ----
+                get subtotal() { return this.cart.reduce((s, i) => s + i.price * i.qty, 0); },
+                get tax() { return Math.round(this.subtotal * 0.11); },
+                get total() { return this.subtotal + this.tax; },
+
+                // ---- cart actions ----
+                addToCart(item) {
+                    const existing = this.cart.find(i => i.id === item.id);
+                    if (existing) existing.qty++;
+                    else this.cart.push({ id: item.id, name: item.name, price: item.price, cat: item.cat, qty: 1 });
+                },
+                cartQty(idx, delta) {
+                    this.cart[idx].qty += delta;
+                    if (this.cart[idx].qty < 1) this.cart.splice(idx, 1);
+                },
+                removeCartItem(idx) { this.cart.splice(idx, 1); },
+                clearCart() { this.cart = []; },
+                checkout() {
+                    if (this.cart.length === 0) return;
+                    const total = this.total;
+                    const ref = 'TRX' + String(this.transactions.length + 1).padStart(3, '0');
+                    const now = new Date();
+                    this.transactions.unshift({
+                        id: ref,
+                        unit: this.unitInfo[this.activeUnit].label,
+                        amount: total,
+                        status: 'Completed',
+                        time: now.toTimeString().slice(0, 5)
+                    });
+                    this.checkoutModal = { open: true, total: this.formatRp(total), ref: 'Ref: ' + ref };
+                    this.clearCart();
+                },
+
+                // ---- member actions ----
+                openMemberModal() {
+                    this.memberModal = { open: true, name: '', type: 'Local', package: this.membershipPackages[0] || '' };
+                },
+                saveMember() {
+                    if (!this.units.gym) return;
+                    const name = (this.memberModal.name || '').trim() || 'New Member';
+                    const nextNum = this.members.length + 1;
+                    this.units.gym.members.unshift({
+                        id: 'MB' + String(nextNum).padStart(3, '0'),
+                        name: name,
+                        package: this.memberModal.package || 'Monthly',
+                        type: this.memberModal.type,
+                        expiry: '30 Days'
+                    });
+                    this.memberModal.open = false;
+                },
+                askDeleteMember(m) {
+                    this.confirmModal = {
+                        open: true,
+                        title: 'Delete Member',
+                        message: `Remove ${m.name} (${m.id})? This cannot be undone.`,
+                        memberId: m.id
+                    };
+                },
+                confirmDeleteMember() {
+                    if (this.units.gym) {
+                        this.units.gym.members = this.units.gym.members.filter(m => m.id !== this.confirmModal.memberId);
+                    }
+                    this.confirmModal.open = false;
+                },
+
+                // ---- item actions ----
+                openItemModal(item = null) {
+                    if (item) {
+                        this.itemModal = { open: true, editingId: item.id, name: item.name, price: item.price, cat: item.cat, stock: item.stock };
+                    } else {
+                        this.itemModal = { open: true, editingId: null, name: '', price: '', cat: this.unitCategories[0] || 'General', stock: '' };
+                    }
+                },
+                saveItem() {
+                    const name = (this.itemModal.name || '').trim();
+                    if (!name) return;
+                    const list = this.catalog;
+                    if (this.itemModal.editingId) {
+                        const it = list.find(i => i.id === this.itemModal.editingId);
+                        if (it) {
+                            it.name = name;
+                            it.price = Number(this.itemModal.price) || 0;
+                            it.cat = this.itemModal.cat || 'General';
+                            it.stock = Number(this.itemModal.stock) || 0;
+                        }
+                    } else {
+                        list.unshift({
+                            id: Date.now(),
+                            name: name,
+                            cat: this.itemModal.cat || 'General',
+                            price: Number(this.itemModal.price) || 0,
+                            stock: Number(this.itemModal.stock) || 0,
+                            emoji: '🆕'
+                        });
+                    }
+                    this.itemModal.open = false;
+                },
+
+                // ---- category actions ----
+                openCategoryModal() { this.categoryModal = { open: true, name: '' }; },
+                saveCategory() {
+                    const name = (this.categoryModal.name || '').trim();
+                    if (!name) return;
+                    if (!this.currentUnit.categories) this.currentUnit.categories = [];
+                    if (!this.currentUnit.categories.includes(name)) this.currentUnit.categories.push(name);
+                    this.categoryModal.open = false;
+                },
+                selectCategory(cat) { this.activeCategory = (this.activeCategory === cat ? null : cat); },
+
+                // ---- helpers ----
+                formatRp(n) { return 'Rp ' + (Number(n) || 0).toLocaleString('id-ID'); }
+            }));
+        });
+    </script>
+</body>
+</html>
