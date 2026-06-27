@@ -1,0 +1,25 @@
+{
+  "unit": "store",
+  "label": "Store",
+  "tagline": "Equipment",
+  "icon": "fa-bag-shopping",
+  "categories": [
+    { "name": "Supplement", "description": "Nutrition and supplements to support training" },
+    { "name": "Equipment", "description": "Training gear and equipment" },
+    { "name": "Apparel", "description": "Sportswear and apparel" },
+    { "name": "Accessories", "description": "Accessories to support your activities" }
+  ],
+  "catalog": [
+    { "id": 101, "name": "Whey Protein 1kg", "cat": "Supplement", "price": 289000, "stock": 34, "emoji": "🥤" },
+    { "id": 102, "name": "BCAA 300g", "cat": "Supplement", "price": 195000, "stock": 21, "emoji": "💊" },
+    { "id": 103, "name": "Creatine 250g", "cat": "Supplement", "price": 165000, "stock": 28, "emoji": "🧪" },
+    { "id": 104, "name": "Boxing Gloves 12oz", "cat": "Equipment", "price": 450000, "stock": 18, "emoji": "🥊" },
+    { "id": 105, "name": "Hand Wraps", "cat": "Equipment", "price": 75000, "stock": 60, "emoji": "🧤" },
+    { "id": 106, "name": "Shin Guards", "cat": "Equipment", "price": 380000, "stock": 14, "emoji": "🦵" },
+    { "id": 107, "name": "Yoga Mat Pro", "cat": "Equipment", "price": 125000, "stock": 12, "emoji": "🧘" },
+    { "id": 108, "name": "Fight Camp Tee", "cat": "Apparel", "price": 165000, "stock": 40, "emoji": "👕" },
+    { "id": 109, "name": "Training Shorts", "cat": "Apparel", "price": 210000, "stock": 25, "emoji": "🩳" },
+    { "id": 110, "name": "Shaker Bottle", "cat": "Accessories", "price": 65000, "stock": 75, "emoji": "🍶" },
+    { "id": 111, "name": "Gym Towel", "cat": "Accessories", "price": 55000, "stock": 90, "emoji": "🧺" }
+  ]
+}

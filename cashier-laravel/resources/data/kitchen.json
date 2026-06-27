@@ -1,0 +1,25 @@
+{
+  "unit": "kitchen",
+  "label": "Kitchen",
+  "tagline": "F&B",
+  "icon": "fa-utensils",
+  "categories": [
+    { "name": "Smoothie", "description": "Healthy blended fruit drinks" },
+    { "name": "Main", "description": "High-protein main dishes" },
+    { "name": "Snack", "description": "Light nutritious snacks" },
+    { "name": "Beverage", "description": "Assorted fresh beverages" }
+  ],
+  "catalog": [
+    { "id": 201, "name": "Banana Smoothie", "cat": "Smoothie", "price": 45000, "stock": 48, "emoji": "🍌" },
+    { "id": 202, "name": "Berry Blast Smoothie", "cat": "Smoothie", "price": 52000, "stock": 40, "emoji": "🍓" },
+    { "id": 203, "name": "Green Detox Smoothie", "cat": "Smoothie", "price": 50000, "stock": 35, "emoji": "🥬" },
+    { "id": 204, "name": "Grilled Chicken Bowl", "cat": "Main", "price": 89000, "stock": 22, "emoji": "🍗" },
+    { "id": 205, "name": "Beef Steak & Veggies", "cat": "Main", "price": 135000, "stock": 15, "emoji": "🥩" },
+    { "id": 206, "name": "Salmon Salad", "cat": "Main", "price": 110000, "stock": 18, "emoji": "🥗" },
+    { "id": 207, "name": "Protein Pancakes", "cat": "Snack", "price": 60000, "stock": 30, "emoji": "🥞" },
+    { "id": 208, "name": "Energy Bar", "cat": "Snack", "price": 35000, "stock": 80, "emoji": "🍫" },
+    { "id": 209, "name": "Coconut Water", "cat": "Beverage", "price": 30000, "stock": 100, "emoji": "🥥" },
+    { "id": 210, "name": "Cold Brew Coffee", "cat": "Beverage", "price": 40000, "stock": 55, "emoji": "☕" },
+    { "id": 211, "name": "Electrolyte Drink", "cat": "Beverage", "price": 38000, "stock": 65, "emoji": "🧃" }
+  ]
+}
