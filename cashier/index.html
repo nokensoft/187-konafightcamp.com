@@ -6,6 +6,8 @@
     <title>Cashier Dashboard - Kona Fight Camp</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -21,9 +23,22 @@
 </head>
 <body class="bg-zinc-50 text-zinc-900">
     <div x-data="posApp" x-cloak class="flex h-screen overflow-hidden">
+        <!-- Mobile sidebar backdrop -->
+        <div x-show="sidebarOpen" x-cloak x-transition.opacity
+             @click="sidebarOpen = false"
+             class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
         <!-- Sidebar -->
-        <div class="w-72 bg-white border-r border-zinc-100 flex flex-col shadow-sm">
-            <div class="p-8 border-b">
+        <div class="w-72 bg-white border-r border-zinc-100 flex flex-col shadow-sm overflow-y-auto
+                    fixed inset-y-0 left-0 z-50 transform transition-transform duration-300
+                    lg:static lg:z-auto lg:translate-x-0"
+             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+            <div class="p-8 border-b relative">
+                <button @click="sidebarOpen = false"
+                        class="lg:hidden absolute top-6 right-6 w-9 h-9 flex items-center justify-center rounded-2xl text-zinc-400 hover:bg-zinc-100"
+                        aria-label="Close menu">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-red-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl leading-none">F</div>
                     <div class="font-semibold text-3xl tracking-tighter">FitHub</div>
@@ -38,7 +53,7 @@
                 </div>
                 <nav class="space-y-1 px-3">
                     <template x-for="n in unitNav" :key="n.tab">
-                        <a @click.prevent="activeTab = n.tab"
+                        <a @click.prevent="activeTab = n.tab; sidebarOpen = false"
                            :class="{ 'bg-zinc-100': activeTab === n.tab }"
                            class="flex items-center gap-3 px-5 py-4 rounded-3xl cursor-pointer hover:bg-zinc-100">
                             <i class="fa-solid w-5" :class="n.icon"></i>
@@ -61,34 +76,40 @@
 
         <!-- Main Area -->
         <div class="flex-1 flex flex-col">
-            <header class="h-16 bg-white border-b flex items-center px-8 justify-between">
-                <div class="flex items-center gap-8">
-                    <h1 class="text-2xl font-semibold tracking-tight" x-text="pageTitle"></h1>
+            <header class="bg-white border-b flex items-center gap-3 px-4 py-3 lg:px-8 lg:py-0 lg:h-16 justify-between flex-wrap lg:flex-nowrap">
+                <div class="flex items-center gap-3 lg:gap-8 min-w-0 flex-wrap">
+                    <button @click="sidebarOpen = true"
+                            class="lg:hidden shrink-0 -ml-1 w-10 h-10 flex items-center justify-center rounded-2xl text-zinc-600 hover:bg-zinc-100 text-xl"
+                            aria-label="Open menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+
+                    <h1 class="text-xl lg:text-2xl font-semibold tracking-tight truncate" x-text="pageTitle"></h1>
 
                     <div class="flex bg-zinc-100 rounded-3xl p-1 text-sm font-medium">
                         <template x-for="u in unitKeys" :key="u">
                             <button @click="activeUnit = u"
-                                    class="px-6 py-2 rounded-3xl transition-all flex items-center gap-2"
+                                    class="px-3 sm:px-6 py-2 rounded-3xl transition-all flex items-center gap-2"
                                     :class="activeUnit === u ? 'bg-white shadow text-red-600' : 'text-zinc-500 hover:text-zinc-700'">
                                 <i class="fa-solid" :class="unitInfo[u].icon"></i>
-                                <span x-text="unitInfo[u].label"></span>
+                                <span class="hidden sm:inline" x-text="unitInfo[u].label"></span>
                             </button>
                         </template>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6">
-                    <div class="relative w-80">
+                <div class="flex items-center gap-4 lg:gap-6 w-full lg:w-auto">
+                    <div class="relative flex-1 lg:w-80 lg:flex-none">
                         <input x-model="searchQuery"
                                type="text"
                                placeholder="Quick search members or products..."
-                               class="w-full bg-zinc-100 border border-transparent focus:border-red-200 rounded-3xl py-3 pl-12 outline-none text-sm">
-                        <i class="fa-solid fa-magnifying-glass absolute left-5 top-3.5 text-zinc-400"></i>
+                               class="w-full bg-zinc-100 border border-transparent focus:border-red-200 rounded-3xl py-2.5 lg:py-3 pl-11 lg:pl-12 outline-none text-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 lg:left-5 top-3 lg:top-3.5 text-zinc-400"></i>
                     </div>
 
-                    <div class="flex items-center gap-5 text-zinc-400">
+                    <div class="flex items-center gap-5 text-zinc-400 shrink-0">
                         <i class="fa-solid fa-bell text-xl cursor-pointer hover:text-zinc-600"></i>
-                        <div class="text-right text-sm">
+                        <div class="hidden xl:block text-right text-sm">
                             <div class="font-medium text-zinc-700">21 June 2026</div>
                             <div class="text-emerald-500 text-xs">13:52</div>
                         </div>
@@ -97,7 +118,7 @@
             </header>
 
             <!-- Content -->
-            <div class="flex-1 overflow-auto p-8">
+            <div class="flex-1 overflow-auto p-4 lg:p-8">
                 <!-- Data load error banner -->
                 <div x-show="loadError" x-cloak class="bg-red-50 border border-red-200 text-red-700 rounded-3xl p-5 mb-6 text-sm flex items-start gap-3">
                     <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
@@ -110,7 +131,7 @@
                 <!-- DASHBOARD -->
                 <div x-show="activeTab === 'dashboard'" class="space-y-6">
                     <div class="grid grid-cols-12 gap-6">
-                        <div class="col-span-12 lg:col-span-8 grid grid-cols-3 gap-6">
+                        <div class="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
                             <div class="bg-white rounded-3xl p-7 shadow-sm">
                                 <div class="flex justify-between items-start">
                                     <div>
@@ -203,16 +224,16 @@
                 </div>
 
                 <!-- POS -->
-                <div x-show="activeTab === 'pos'" class="grid grid-cols-12 gap-6 h-full">
+                <div x-show="activeTab === 'pos'" class="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:h-full">
                     <!-- Menu -->
-                    <div class="col-span-7 bg-white rounded-3xl p-6 flex flex-col">
+                    <div class="lg:col-span-7 bg-white rounded-3xl p-6 flex flex-col">
                         <div class="mb-6">
                             <h2 class="font-semibold text-xl" x-text="unitInfo[activeUnit].label + ' Menu'"></h2>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4 flex-1 overflow-auto auto-rows-min">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:flex-1 lg:overflow-auto auto-rows-min">
                             <template x-if="posItems.length === 0">
-                                <div class="col-span-3 flex flex-col items-center justify-center text-zinc-300 py-20">
+                                <div class="col-span-2 sm:col-span-3 flex flex-col items-center justify-center text-zinc-300 py-20">
                                     <i class="fa-solid fa-box-open text-5xl mb-4"></i>
                                     <div class="text-sm">No items available</div>
                                 </div>
@@ -222,7 +243,7 @@
                                     <div class="h-28 bg-zinc-100 rounded-2xl mb-4 flex items-center justify-center text-5xl" x-text="item.emoji || '📦'"></div>
                                     <div class="font-medium leading-tight" x-text="item.name"></div>
                                     <div class="text-xs text-zinc-400" x-text="item.cat"></div>
-                                    <div class="mt-6 flex items-center justify-between">
+                                    <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
                                         <div class="text-lg font-semibold" x-text="formatRp(item.price)"></div>
                                         <button @click.stop="addToCart(item)" class="px-5 py-2 bg-red-600 text-white text-xs rounded-2xl">Add</button>
                                     </div>
@@ -232,10 +253,13 @@
                     </div>
 
                     <!-- Cart -->
-                    <div class="col-span-5 bg-white rounded-3xl p-6 flex flex-col">
-                        <div class="font-semibold mb-6">Cart</div>
+                    <div id="cartCard" class="lg:col-span-5 bg-white rounded-3xl p-6 flex flex-col scroll-mt-4">
+                        <div class="font-semibold mb-6 flex items-center gap-2">
+                            <span>Cart</span>
+                            <span x-show="cartCount > 0" x-cloak class="bg-red-600 text-white text-xs font-semibold rounded-full min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center" x-text="cartCount"></span>
+                        </div>
 
-                        <div class="flex-1 overflow-auto space-y-4">
+                        <div class="space-y-4 lg:flex-1 lg:overflow-auto">
                             <template x-if="cart.length === 0">
                                 <div class="flex flex-col items-center justify-center text-zinc-300 py-20">
                                     <i class="fa-solid fa-cart-shopping text-5xl mb-4"></i>
@@ -285,15 +309,16 @@
 
                 <!-- MEMBERS -->
                 <div x-show="activeTab === 'members'">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-3xl font-semibold">Gym Memberships</h2>
+                    <div class="flex flex-wrap gap-4 justify-between items-center mb-8">
+                        <h2 class="text-2xl lg:text-3xl font-semibold">Gym Memberships</h2>
                         <button @click="openMemberModal()" class="bg-red-600 text-white px-6 py-3.5 rounded-3xl flex items-center gap-2 hover:bg-red-700">
                             <i class="fa-solid fa-plus"></i> New Member
                         </button>
                     </div>
 
                     <div class="bg-white rounded-3xl overflow-hidden">
-                        <table class="w-full">
+                        <div class="overflow-x-auto">
+                        <table class="w-full min-w-[640px]">
                             <thead class="bg-zinc-50">
                                 <tr>
                                     <th class="text-left py-5 px-8 text-xs font-medium text-zinc-500">ID</th>
@@ -324,20 +349,21 @@
                                 </template>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
 
                 <!-- INVENTORY -->
                 <div x-show="activeTab === 'inventory'">
-                    <div class="flex justify-between mb-8">
-                        <h2 class="text-3xl font-semibold" x-text="activeUnit === 'gym' ? 'Packages &amp; Categories' : activeUnit === 'store' ? 'Store Catalog' : 'Kitchen Menu'"></h2>
+                    <div class="flex flex-wrap gap-4 justify-between items-center mb-8">
+                        <h2 class="text-2xl lg:text-3xl font-semibold" x-text="activeUnit === 'gym' ? 'Packages &amp; Categories' : activeUnit === 'store' ? 'Store Catalog' : 'Kitchen Menu'"></h2>
                         <button @click="openItemModal()" class="bg-red-600 text-white px-7 py-3.5 rounded-3xl flex items-center gap-2 hover:bg-red-700">
                             <i class="fa-solid fa-plus"></i> Add New
                         </button>
                     </div>
 
                     <div class="grid grid-cols-12 gap-6">
-                        <div class="col-span-3 bg-white rounded-3xl p-6">
+                        <div class="col-span-12 lg:col-span-3 bg-white rounded-3xl p-6">
                             <h3 class="font-medium mb-4">Categories</h3>
                             <div class="space-y-3">
                                 <div @click="activeCategory = null"
@@ -357,8 +383,8 @@
                             </div>
                             <button @click="openCategoryModal()" class="text-red-600 text-sm mt-6 flex items-center gap-1"><i class="fa-solid fa-plus"></i> New Category</button>
                         </div>
-                        <div class="col-span-9 bg-white rounded-3xl p-6">
-                            <table class="w-full">
+                        <div class="col-span-12 lg:col-span-9 bg-white rounded-3xl p-6 overflow-x-auto">
+                            <table class="w-full min-w-[560px]">
                                 <thead>
                                     <tr class="text-xs text-zinc-400 border-b">
                                         <th class="py-6 px-6 text-left">Item</th>
@@ -400,8 +426,8 @@
         <div x-show="memberModal.open" x-cloak x-transition.opacity
              @click.self="memberModal.open = false" @keydown.escape.window="memberModal.open = false"
              class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div x-show="memberModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
-                <div class="p-8">
+            <div x-show="memberModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div class="p-6 sm:p-8">
                     <h3 class="text-xl font-semibold mb-6">Register New Member</h3>
                     <div class="space-y-5">
                         <input x-model="memberModal.name" placeholder="Full Name" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
@@ -429,8 +455,8 @@
         <div x-show="itemModal.open" x-cloak x-transition.opacity
              @click.self="itemModal.open = false" @keydown.escape.window="itemModal.open = false"
              class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div x-show="itemModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
-                <div class="p-8">
+            <div x-show="itemModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div class="p-6 sm:p-8">
                     <h3 class="font-semibold text-xl mb-6" x-text="(itemModal.editingId ? 'Edit ' : 'New ') + itemNoun"></h3>
                     <div class="space-y-4">
                         <input x-model="itemModal.name" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Name">
@@ -454,8 +480,8 @@
         <div x-show="categoryModal.open" x-cloak x-transition.opacity
              @click.self="categoryModal.open = false" @keydown.escape.window="categoryModal.open = false"
              class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div x-show="categoryModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md">
-                <div class="p-8">
+            <div x-show="categoryModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div class="p-6 sm:p-8">
                     <h3 class="font-semibold text-xl mb-6" x-text="categoryModal.editingName ? 'Edit Category' : 'New Category'"></h3>
                     <input x-model="categoryModal.name" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Category name">
                     <input x-model="categoryModal.description" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300 mt-4" placeholder="Category description">
@@ -471,8 +497,8 @@
         <div x-show="confirmModal.open" x-cloak x-transition.opacity
              @click.self="confirmModal.open = false" @keydown.escape.window="confirmModal.open = false"
              class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div x-show="confirmModal.open" x-transition class="bg-white rounded-3xl w-full max-w-sm">
-                <div class="p-8 text-center">
+            <div x-show="confirmModal.open" x-transition class="bg-white rounded-3xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div class="p-6 sm:p-8 text-center">
                     <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
@@ -486,23 +512,99 @@
             </div>
         </div>
 
-        <!-- Checkout success -->
+        <!-- Checkout success / Receipt -->
         <div x-show="checkoutModal.open" x-cloak x-transition.opacity
              @click.self="checkoutModal.open = false" @keydown.escape.window="checkoutModal.open = false"
              class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div x-show="checkoutModal.open" x-transition class="bg-white rounded-3xl w-full max-w-sm">
-                <div class="p-8 text-center">
-                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
-                        <i class="fa-solid fa-check"></i>
+            <div x-show="checkoutModal.open" x-transition class="bg-white rounded-3xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div class="p-6 sm:p-8">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h3 class="font-semibold text-2xl">Payment Successful</h3>
+                        <p class="text-zinc-400 text-sm mt-1">Struk siap diunduh &amp; dipindai</p>
                     </div>
-                    <h3 class="font-semibold text-2xl mb-2">Payment Successful</h3>
-                    <p class="text-zinc-500">Total paid</p>
-                    <p class="text-3xl font-semibold text-red-600 my-2" x-text="checkoutModal.total"></p>
-                    <p class="text-xs text-zinc-400 mb-8" x-text="checkoutModal.ref"></p>
-                    <button @click="checkoutModal.open = false" class="w-full py-4 bg-zinc-900 text-white rounded-3xl hover:bg-zinc-800">Done</button>
+
+                    <!-- Receipt (area captured for download) -->
+                    <div id="receiptContent" class="bg-white border border-zinc-200 rounded-2xl p-6 text-sm">
+                        <div class="text-center border-b border-dashed border-zinc-300 pb-4 mb-4">
+                            <div class="font-bold text-lg tracking-tight">KONA FIGHT CAMP</div>
+                            <div class="text-zinc-400 text-xs">FitHub • Multi-Unit POS</div>
+                            <div class="text-zinc-500 text-xs mt-1">
+                                <span x-text="receipt.unit"></span> • <span x-text="receipt.date + ' ' + receipt.time"></span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between text-xs text-zinc-500 mb-3">
+                            <span>No. Struk</span>
+                            <span class="font-semibold text-zinc-700" x-text="receipt.ref"></span>
+                        </div>
+
+                        <div class="space-y-2 border-b border-dashed border-zinc-300 pb-4 mb-4">
+                            <template x-for="(it, i) in receipt.items" :key="i">
+                                <div class="flex justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="truncate" x-text="it.name"></div>
+                                        <div class="text-xs text-zinc-400" x-text="it.qty + ' × ' + formatRp(it.price)"></div>
+                                    </div>
+                                    <div class="font-medium whitespace-nowrap" x-text="formatRp(it.lineTotal)"></div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-zinc-500"><span>Subtotal</span><span x-text="formatRp(receipt.subtotal)"></span></div>
+                            <div class="flex justify-between text-zinc-500"><span>Tax (11%)</span><span x-text="formatRp(receipt.tax)"></span></div>
+                            <div class="flex justify-between font-semibold text-base border-t border-zinc-200 mt-2 pt-2">
+                                <span>Total</span><span class="text-red-600" x-text="formatRp(receipt.total)"></span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center mt-5 pt-4 border-t border-dashed border-zinc-300">
+                            <img :src="receiptQrUrl" x-show="receiptQrUrl" alt="QR struk" class="w-32 h-32">
+                            <div x-show="!receiptQrUrl" class="w-32 h-32 flex items-center justify-center text-zinc-300 text-xs text-center">QR tidak tersedia</div>
+                            <div class="text-[10px] text-zinc-400 mt-2 tracking-widest">SCAN UNTUK VERIFIKASI STRUK</div>
+                        </div>
+
+                        <div class="text-center text-xs text-zinc-400 mt-4">Terima kasih atas kunjungan Anda</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-6">
+                        <button @click="downloadReceipt()" class="py-4 border border-zinc-300 rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2 font-medium">
+                            <i class="fa-solid fa-download"></i> Download
+                        </button>
+                        <button @click="checkoutModal.open = false" class="py-4 bg-zinc-900 text-white rounded-3xl hover:bg-zinc-800 font-medium">Done</button>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Add-to-cart toast -->
+        <div x-show="toast.show" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             role="status" aria-live="polite"
+             class="fixed left-1/2 -translate-x-1/2 bottom-24 lg:bottom-6 z-[70] w-[calc(100%-2rem)] max-w-sm">
+            <div class="bg-zinc-900 text-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+                <span class="text-sm flex-1 min-w-0 truncate" x-text="toast.message"></span>
+                <button @click="goToCart()" class="shrink-0 text-sm font-semibold text-emerald-400 hover:text-emerald-300 whitespace-nowrap">Lihat Keranjang</button>
+            </div>
+        </div>
+
+        <!-- Mobile quick-access cart button -->
+        <button x-show="activeTab === 'pos' && cartCount > 0" x-cloak x-transition.opacity
+                @click="goToCart()"
+                class="lg:hidden fixed bottom-6 right-6 z-[65] w-14 h-14 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-xl flex items-center justify-center"
+                aria-label="Lihat keranjang">
+            <i class="fa-solid fa-cart-shopping text-lg"></i>
+            <span class="absolute -top-1 -right-1 bg-white text-red-600 text-xs font-bold rounded-full min-w-[1.5rem] h-6 px-1 flex items-center justify-center border-2 border-red-600" x-text="cartCount"></span>
+        </button>
 
         <!-- Loading overlay -->
         <div x-show="loading" x-cloak class="fixed inset-0 bg-white flex items-center justify-center z-[60]">
@@ -521,6 +623,7 @@
                 activeUnit: 'gym',
                 searchQuery: '',
                 activeCategory: null,
+                sidebarOpen: false,
                 loading: true,
                 loadError: '',
 
@@ -568,7 +671,11 @@
                 itemModal:     { open: false, editingId: null, name: '', price: '', cat: '', stock: '' },
                 categoryModal: { open: false, editingName: null, name: '', description: '' },
                 confirmModal:  { open: false, title: '', message: '', memberId: null },
-                checkoutModal: { open: false, total: '', ref: '' },
+                checkoutModal: { open: false },
+                receipt: { ref: '', unit: '', date: '', time: '', items: [], subtotal: 0, tax: 0, total: 0 },
+                receiptQrUrl: '',
+                toast: { show: false, message: '' },
+                _toastTimer: null,
 
                 // ---- lifecycle ----
                 async init() {
@@ -665,12 +772,14 @@
                 get subtotal() { return this.cart.reduce((s, i) => s + i.price * i.qty, 0); },
                 get tax() { return Math.round(this.subtotal * 0.11); },
                 get total() { return this.subtotal + this.tax; },
+                get cartCount() { return this.cart.reduce((s, i) => s + i.qty, 0); },
 
                 // ---- cart actions ----
                 addToCart(item) {
                     const existing = this.cart.find(i => i.id === item.id);
                     if (existing) existing.qty++;
                     else this.cart.push({ id: item.id, name: item.name, price: item.price, cat: item.cat, qty: 1 });
+                    this.showToast(item.name + ' ditambahkan ke keranjang');
                 },
                 cartQty(idx, delta) {
                     this.cart[idx].qty += delta;
@@ -678,20 +787,96 @@
                 },
                 removeCartItem(idx) { this.cart.splice(idx, 1); },
                 clearCart() { this.cart = []; },
+                showToast(message) {
+                    this.toast.message = message;
+                    this.toast.show = true;
+                    if (this._toastTimer) clearTimeout(this._toastTimer);
+                    this._toastTimer = setTimeout(() => { this.toast.show = false; }, 2800);
+                },
+                goToCart() {
+                    this.toast.show = false;
+                    const el = document.getElementById('cartCard');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                },
                 checkout() {
                     if (this.cart.length === 0) return;
+                    const subtotal = this.subtotal;
+                    const tax = this.tax;
                     const total = this.total;
                     const ref = 'TRX' + String(this.transactions.length + 1).padStart(3, '0');
                     const now = new Date();
+                    const time = now.toTimeString().slice(0, 5);
                     this.transactions.unshift({
                         id: ref,
                         unit: this.unitInfo[this.activeUnit].label,
                         amount: total,
                         status: 'Completed',
-                        time: now.toTimeString().slice(0, 5)
+                        time: time
                     });
-                    this.checkoutModal = { open: true, total: this.formatRp(total), ref: 'Ref: ' + ref };
+                    this.receipt = {
+                        ref: ref,
+                        unit: this.unitInfo[this.activeUnit].label,
+                        date: now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+                        time: time,
+                        items: this.cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, lineTotal: i.price * i.qty })),
+                        subtotal: subtotal,
+                        tax: tax,
+                        total: total
+                    };
+                    this.receiptQrUrl = '';
+                    this.toast.show = false;
+                    this.checkoutModal.open = true;
                     this.clearCart();
+                    this.renderReceiptQR();
+                },
+
+                // ---- receipt: QR code + image download ----
+                receiptText() {
+                    const r = this.receipt;
+                    const lines = [
+                        'KONA FIGHT CAMP - FitHub',
+                        'Ref: ' + r.ref,
+                        'Unit: ' + r.unit,
+                        'Tanggal: ' + r.date + ' ' + r.time,
+                        '----------------------------'
+                    ];
+                    r.items.forEach(i => lines.push(i.name + ' x' + i.qty + ' = ' + this.formatRp(i.lineTotal)));
+                    lines.push('----------------------------');
+                    lines.push('Subtotal: ' + this.formatRp(r.subtotal));
+                    lines.push('Pajak 11%: ' + this.formatRp(r.tax));
+                    lines.push('TOTAL: ' + this.formatRp(r.total));
+                    lines.push('Terima kasih!');
+                    return lines.join('\n');
+                },
+                renderReceiptQR() {
+                    if (typeof qrcode === 'undefined' || !this.receipt.ref) { this.receiptQrUrl = ''; return; }
+                    try {
+                        const qr = qrcode(0, 'M');
+                        qr.addData(this.receiptText());
+                        qr.make();
+                        this.receiptQrUrl = qr.createDataURL(6, 12);
+                    } catch (e) {
+                        console.error('QR generation failed:', e);
+                        this.receiptQrUrl = '';
+                    }
+                },
+                async downloadReceipt() {
+                    const el = document.getElementById('receiptContent');
+                    if (!el) return;
+                    if (typeof html2canvas === 'undefined') {
+                        alert('Komponen unduhan belum termuat. Pastikan ada koneksi internet lalu coba lagi.');
+                        return;
+                    }
+                    try {
+                        const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+                        const link = document.createElement('a');
+                        link.download = 'receipt-' + (this.receipt.ref || 'kfc') + '.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    } catch (e) {
+                        console.error('Receipt download failed:', e);
+                        alert('Gagal membuat gambar struk.');
+                    }
                 },
 
                 // ---- member actions ----
