@@ -90,7 +90,7 @@ export default (initial = {}, role = 'cashier') => ({
     trash: [],
 
     // ---- modal state ----
-    memberModal:   { open: false, name: '', gender: 'Male', type: 'Local', package: '', idNumber: '', address: '', notes: '', registrationDate: '' },
+    memberModal:   { open: false, saving: false, errors: [], name: '', email: '', password: '', password_confirmation: '', phone: '', dateOfBirth: '', gender: 'Male', type: 'Local', package: '', idNumber: '', idPhoto: null, idPhotoPreview: '', idPhotoDragging: false, address: '', emergencyContactName: '', emergencyContactPhone: '', notes: '' },
     memberView:    { open: false, member: null },
     itemModal:     { open: false, editingId: null, name: '', price: '', cat: '', stock: '' },
     categoryModal: { open: false, editingName: null, name: '', description: '' },
@@ -296,34 +296,99 @@ export default (initial = {}, role = 'cashier') => ({
     openMemberModal() {
         this.memberModal = {
             open: true,
+            saving: false,
+            errors: [],
             name: '',
+            email: '',
+            password: '',
+            password_confirmation: '',
+            phone: '',
+            dateOfBirth: '',
             gender: 'Male',
             type: 'Local',
-            package: this.membershipPackages[0] || '',
+            package: '',
             idNumber: '',
+            idPhoto: null,
+            idPhotoPreview: '',
+            idPhotoDragging: false,
             address: '',
+            emergencyContactName: '',
+            emergencyContactPhone: '',
             notes: '',
-            registrationDate: this._today(),
         };
     },
+
+    handleIdPhotoFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        this.memberModal.idPhoto = file;
+        const reader = new FileReader();
+        reader.onload = (e) => { this.memberModal.idPhotoPreview = e.target.result; };
+        reader.readAsDataURL(file);
+    },
+
+    clearIdPhoto() {
+        this.memberModal.idPhoto = null;
+        this.memberModal.idPhotoPreview = '';
+        const input = document.getElementById('idPhotoInput');
+        if (input) input.value = '';
+    },
     viewMember(m) { this.memberView = { open: true, member: m }; },
-    saveMember() {
-        if (!this.units.gym) return;
-        const name = (this.memberModal.name || '').trim() || 'New Member';
-        const nextNum = this.members.length + 1;
-        this.units.gym.members.unshift({
-            id: 'MB' + String(nextNum).padStart(3, '0'),
-            name: name,
-            gender: this.memberModal.gender || 'Male',
-            package: this.memberModal.package || 'Monthly',
-            type: this.memberModal.type,
-            idNumber: (this.memberModal.idNumber || '').trim(),
-            address: (this.memberModal.address || '').trim(),
-            notes: (this.memberModal.notes || '').trim(),
-            registrationDate: this._formatDate(this.memberModal.registrationDate),
-            expiry: '30 Days',
-        });
-        this.memberModal.open = false;
+
+    // Persist the member on the server (creates a login account + gym profile),
+    // then insert the returned record into the in-memory list.
+    async saveMember() {
+        if (!this.units.gym || this.memberModal.saving) return;
+        this.memberModal.saving = true;
+        this.memberModal.errors = [];
+
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        const fd = new FormData();
+        fd.append('name',                     (this.memberModal.name || '').trim());
+        fd.append('email',                    (this.memberModal.email || '').trim().toLowerCase());
+        fd.append('password',                 this.memberModal.password);
+        fd.append('password_confirmation',    this.memberModal.password_confirmation);
+        fd.append('phone',                    (this.memberModal.phone || '').trim());
+        fd.append('date_of_birth',            this.memberModal.dateOfBirth || '');
+        fd.append('gender',                   this.memberModal.gender);
+        fd.append('membership_type',          this.memberModal.type);
+        fd.append('membership_package',       this.memberModal.package || '');
+        fd.append('id_number',                (this.memberModal.idNumber || '').trim());
+        fd.append('address',                  (this.memberModal.address || '').trim());
+        fd.append('emergency_contact_name',   (this.memberModal.emergencyContactName || '').trim());
+        fd.append('emergency_contact_phone',  (this.memberModal.emergencyContactPhone || '').trim());
+        fd.append('notes',                    (this.memberModal.notes || '').trim());
+        if (this.memberModal.idPhoto) fd.append('id_photo', this.memberModal.idPhoto);
+
+        try {
+            const res = await fetch('/members', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token || '',
+                },
+                body: fd,
+            });
+
+            if (res.status === 422) {
+                const data = await res.json();
+                this.memberModal.errors = Object.values(data.errors || {}).flat();
+                return;
+            }
+            if (!res.ok) {
+                this.memberModal.errors = ['Something went wrong. Please try again.'];
+                return;
+            }
+
+            const data = await res.json();
+            if (data.member) this.units.gym.members.unshift(data.member);
+            this.memberModal.open = false;
+            this.showToast((data.member?.name || 'Member') + ' added');
+        } catch (e) {
+            console.error('Save member failed:', e);
+            this.memberModal.errors = ['Network error. Please try again.'];
+        } finally {
+            this.memberModal.saving = false;
+        }
     },
     askDeleteMember(m) {
         this.confirmModal = {

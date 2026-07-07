@@ -8,12 +8,13 @@ use Tests\TestCase;
 class ExampleTest extends TestCase
 {
     /**
-     * Guests hitting the root are redirected to the login screen.
+     * Guests hitting the root see the public static landing page.
      */
-    public function test_the_application_redirects_guests_to_login(): void
+    public function test_guests_see_the_public_landing_page(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect('/login');
+        $response->assertOk();
+        $response->assertSee('Kona Fight Camp');
     }
 }

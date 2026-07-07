@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kona Fight Camp</title>
+  <link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}"/>
+  <link rel="apple-touch-icon" href="{{ asset('img/logo.png') }}"/>
+  <script>
+    // Apply the saved theme before first paint to avoid a flash of the wrong theme.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        document.documentElement.classList.toggle('dark', stored ? stored === 'dark' : true);
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: { red: '#E5122B', dark: '#0A0A0A', card: '#111111', border: '#1E1E1E' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { border-radius: 0 !important; box-sizing: border-box; }
+    html { font-family: 'Plus Jakarta Sans', sans-serif; }
+    :root { --red: #E5122B; }
+    .nav-link { position: relative; }
+    .nav-link::after { content:''; position:absolute; left:0; bottom:-4px; width:0; height:2px; background:var(--red); transition:width .3s ease; }
+    .nav-link:hover::after, .nav-link.active::after { width:100%; }
+    .section-border-bottom { border-bottom: 3px solid var(--red); }
+    .btn-red { background:var(--red); color:#fff; transition: opacity .2s, transform .15s; cursor:pointer; }
+    .btn-red:hover { opacity:.88; transform:translateY(-1px); }
+    .btn-outline { border: 2px solid var(--red); color:var(--red); background:transparent; transition: background .2s, color .2s, transform .15s; cursor:pointer; }
+    .btn-outline:hover { background:var(--red); color:#fff; transform:translateY(-1px); }
+    .btn-dark { background:#111; color:#fff; border:2px solid #333; transition: border-color .2s, transform .15s; cursor:pointer; }
+    .btn-dark:hover { border-color:var(--red); transform:translateY(-1px); }
+    a, button, [role="button"] { cursor:pointer; }
+    .card-hover { transition: transform .2s, box-shadow .2s; }
+    .card-hover:hover { transform:translateY(-3px); box-shadow: 0 8px 30px rgba(229,18,43,.15); }
+    .price-card { border-left: 3px solid var(--red); }
+    .highlight-row { background: rgba(229,18,43,.07); }
+    /* Scroll animations */
+    .fade-up { opacity:0; transform:translateY(28px); transition: opacity .55s ease, transform .55s ease; }
+    .fade-up.visible { opacity:1; transform:translateY(0); }
+    /* Nav shrink */
+    nav.scrolled { box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#111; } ::-webkit-scrollbar-thumb { background:#E5122B; }
+    /* Hamburger transition */
+    .mobile-menu { max-height:0; overflow:hidden; transition:max-height .35s ease; }
+    .mobile-menu.open { max-height:500px; }
+    /* Filter tab active */
+    .tab-btn.active { background:var(--red); color:#fff; border-color:var(--red); }
+    /* Google translate hide banner */
+    .goog-te-banner-frame, .goog-te-gadget-icon { display:none !important; }
+    body { top: 0 !important; }
+    .goog-te-gadget { color: transparent !important; }
+    .goog-te-gadget select { color: #fff; background: #111; border:1px solid #333; padding:4px 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size:.8rem; cursor:pointer; }
+    /* Section heading accent */
+    .section-heading span { border-bottom:3px solid var(--red); padding-bottom:4px; }
+    /* Hero overlay */
+    .hero-overlay { background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,.82) 100%); z-index:1; }
+    /* Hero background slideshow + zoom in/out (Ken Burns) */
+    .hero-bg { animation: heroZoom 14s ease-in-out infinite; transform-origin: center; will-change: transform, opacity; }
+    @keyframes heroZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    @media (prefers-reduced-motion: reduce) { .hero-bg { animation: none; } }
+    /* Light mode overrides */
+    html:not(.dark) body { background:#f5f5f5; color:#111; }
+    html:not(.dark) nav { background:#fff; border-bottom:1px solid #e5e5e5; }
+    html:not(.dark) .bg-brand-dark { background:#fff; }
+    html:not(.dark) .bg-brand-card { background:#f0f0f0; }
+    html:not(.dark) .bg-brand-border { background:#e0e0e0; }
+    html:not(.dark) .text-white { color:#111 !important; }
+    html:not(.dark) .text-gray-300 { color:#444 !important; }
+    html:not(.dark) .text-gray-400 { color:#555 !important; }
+    html:not(.dark) .border-brand-border { border-color:#ddd; }
+    html:not(.dark) .bg-\[#111111\] { background:#e8e8e8 !important; }
+    html:not(.dark) footer { background:#111 !important; }
+    html:not(.dark) footer * { color:#ccc !important; }
+    html:not(.dark) .price-card { background:#fff; }
+  </style>
+</head>
+<body class="bg-brand-dark text-white transition-colors duration-300">
+
+<!-- ===== DISCLAIMER TOPBAR ===== -->
+<div x-show="showDisclaimer"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 -translate-y-full"
+     class="fixed top-0 left-0 right-0 z-[70] bg-amber-400 text-black py-2 px-10 flex items-center justify-center text-xs font-semibold tracking-wide text-center">
+  <i class="fa-solid fa-triangle-exclamation mr-2 flex-shrink-0"></i>
+  <span>This website is currently under development. Some features may be incomplete or subject to change.</span>
+  <button @click="showDisclaimer = false"
+          class="absolute right-4 top-1/2 -translate-y-1/2 text-black hover:opacity-60 transition-opacity cursor-pointer"
+          title="Dismiss">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<nav id="navbar" x-data="{ open: false }" class="fixed left-0 right-0 z-50 bg-brand-dark border-b border-brand-border transition-all duration-300" :class="showDisclaimer ? 'top-9' : 'top-0'">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="#home" class="flex items-center gap-3 cursor-pointer">
+        <img src="{{ asset('img/logo.png') }}" alt="Kona Fight Camp Logo" class="h-18 w-14 object-cover shadow-md"/>
+        <span class="font-extrabold text-lg tracking-tight text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+      </a>
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-7 text-sm font-semibold tracking-wide">
+        <a href="#home" class="nav-link text-white hover:text-brand-red transition-colors">HOME</a>
+        <a href="#prices" class="nav-link text-white hover:text-brand-red transition-colors">PRICES</a>
+        <a href="#about" class="nav-link text-white hover:text-brand-red transition-colors">ABOUT</a>
+        <a href="#coaches" class="nav-link text-white hover:text-brand-red transition-colors">COACHES</a>
+        <a href="#gallery" class="nav-link text-white hover:text-brand-red transition-colors">GALLERY</a>
+        <a href="#contact" class="nav-link text-white hover:text-brand-red transition-colors">CONTACT</a>
+      </div>
+      <!-- Right Controls -->
+      <div class="hidden md:flex items-center gap-3">
+        <!-- Dark/Light toggle -->
+        <button @click="darkMode = !darkMode" class="btn-dark p-2 shadow-md text-sm" :title="darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+        </button>
+        @auth
+          <a href="{{ route('dashboard') }}" class="btn-red px-4 py-2 text-xs font-bold shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-gauge-high"></i> DASHBOARD
+          </a>
+        @else
+          <a href="{{ route('login') }}" class="btn-dark px-4 py-2 text-xs font-bold shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i> LOGIN
+          </a>
+          <a href="{{ route('register') }}" class="btn-red px-4 py-2 text-xs font-bold shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-user-plus"></i> JOIN NOW
+          </a>
+        @endauth
+      </div>
+      <!-- Hamburger -->
+      <button @click="open = !open" class="md:hidden text-white text-xl p-2 cursor-pointer">
+        <i :class="open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'"></i>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile Menu -->
+  <div :class="open ? 'open' : ''" class="mobile-menu md:hidden bg-brand-dark border-t border-brand-border px-4">
+    <div class="flex flex-col py-3 gap-3 text-sm font-semibold">
+      <a @click="open=false" href="#home" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">HOME</a>
+      <a @click="open=false" href="#prices" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">PRICES</a>
+      <a @click="open=false" href="#about" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">ABOUT</a>
+      <a @click="open=false" href="#coaches" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">COACHES</a>
+      <a @click="open=false" href="#gallery" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">GALLERY</a>
+      <a @click="open=false" href="#contact" class="py-2 border-b border-brand-border text-white hover:text-brand-red transition-colors">CONTACT</a>
+      <div class="flex items-center gap-3 pt-2">
+        <div id="google_translate_element_mobile" class="text-xs"></div>
+        <button @click="darkMode = !darkMode" class="btn-dark p-2 text-sm shadow-md">
+          <i :class="darkMode ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-blue-400'"></i>
+        </button>
+        @auth
+          <a @click="open=false" href="{{ route('dashboard') }}" class="btn-red px-4 py-2 text-xs font-bold shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-gauge-high"></i> DASHBOARD
+          </a>
+        @else
+          <a @click="open=false" href="{{ route('login') }}" class="btn-dark px-4 py-2 text-xs font-bold shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i> LOGIN
+          </a>
+          <a @click="open=false" href="{{ route('register') }}" class="btn-red px-4 py-2 text-xs font-bold shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-user-plus"></i> JOIN NOW
+          </a>
+        @endauth
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section id="home" x-data="heroSlider()" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+  <!-- Background slideshow (Alpine array) with zoom in/out -->
+  <template x-for="(img, i) in images" :key="i">
+    <img :src="img" alt="Hero background"
+         class="hero-bg absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
+         :class="current === i ? 'opacity-100' : 'opacity-0'"/>
+  </template>
+  <div class="hero-overlay absolute inset-0"></div>
+  <div class="relative z-10 text-center px-4 max-w-4xl mx-auto fade-up">
+    <div class="inline-block border border-brand-red px-4 py-1 text-brand-red text-xs font-bold tracking-widest mb-6 shadow-md">MUAY THAI · BOXING · CONDITIONING</div>
+    <h1 class="text-5xl md:text-7xl font-extrabold leading-none tracking-tight text-white mb-4 drop-shadow-lg">
+      <span class="text-brand-red">KONA</span><br/>FIGHT CAMP
+    </h1>
+    <p class="text-white text-xl md:text-2xl font-bold mb-4 max-w-2xl mx-auto leading-relaxed">
+      Built from experience in the ring, not trends in the fitness industry.
+    </p>
+    <p class="text-gray-300 text-base md:text-lg font-medium mb-3 max-w-2xl mx-auto leading-relaxed">
+      Our coaches bring over 20 years experience fighting, training and coaching in Thailand, Australia, UK, and Indonesia.
+    </p>
+    <p class="text-gray-200 text-base md:text-lg font-semibold mb-8 max-w-2xl mx-auto leading-relaxed">
+      Made for fighters, open to everyone.
+    </p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="#prices" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md">VIEW PRICES</a>
+      <a href="#about" class="btn-outline px-8 py-3 font-bold text-sm tracking-widest shadow-md">ABOUT US</a>
+    </div>
+  </div>
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white opacity-60 animate-bounce">
+    <i class="fa-solid fa-chevron-down text-xl"></i>
+  </div>
+</section>
+
+<!-- ===== STATS BAR ===== -->
+<div class="bg-brand-red py-6">
+  <div class="max-w-2xl mx-auto px-4 grid grid-cols-2 gap-6 text-center text-white">
+    <div class="fade-up"><div class="text-3xl font-extrabold">20+</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">YEARS EXPERIENCE</div></div>
+    <div class="fade-up"><div class="text-3xl font-extrabold">ALL</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">LEVELS WELCOME</div></div>
+  </div>
+</div>
+
+<!-- ===== PRICES ===== -->
+<section id="prices" class="py-20 bg-[#0a0a0a]">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="section-heading mb-12 fade-up">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">MEMBERSHIP</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-white"><span>PRICES</span></h2>
+      <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    </div>
+    <!-- Filter Tabs -->
+    <div x-data="{ tab: 'tourist' }" class="fade-up">
+      <div class="flex gap-3 mb-10 flex-wrap">
+        <button @click="tab='tourist'" :class="tab==='tourist' ? 'active' : ''" class="tab-btn btn-outline px-6 py-2 text-xs font-bold tracking-widest shadow-md transition-all">
+          <i class="fa-solid fa-globe mr-2"></i>TOURIST PRICES
+        </button>
+        <button @click="tab='local'" :class="tab==='local' ? 'active' : ''" class="tab-btn btn-outline px-6 py-2 text-xs font-bold tracking-widest shadow-md transition-all">
+          <i class="fa-solid fa-flag mr-2"></i>INDONESIAN LOCAL
+        </button>
+      </div>
+
+      <!-- TOURIST PRICES -->
+      <div x-show="tab==='tourist'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <!-- Drop-in Sessions -->
+          <div class="price-card bg-[#111111] p-6 shadow-md card-hover border border-brand-border">
+            <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-dumbbell"></i> DROP-IN SESSIONS</div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <div><div class="font-semibold text-white text-sm">Half Session (1hr)</div><div class="text-gray-400 text-xs">Technique · Bag work · Pad work</div></div>
+                <div class="text-brand-red font-bold text-sm">Rp 130K</div>
+              </div>
+              <div class="flex justify-between items-center py-2 highlight-row px-2">
+                <div><div class="font-semibold text-white text-sm">Full Session (2hr)</div><div class="text-gray-400 text-xs">Sparring · Clinching · Technique · Pads</div></div>
+                <div class="text-brand-red font-bold text-sm">Rp 170K</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Packages -->
+          <div class="price-card bg-[#111111] p-6 shadow-md card-hover border border-brand-border">
+            <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-ticket"></i> SESSION PACKAGES</div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">5 Sessions (1hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 600K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border highlight-row px-2">
+                <span class="text-white text-sm font-medium">5 Sessions (2hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 850K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">10 Sessions (1hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 1,000K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 highlight-row px-2">
+                <span class="text-white text-sm font-medium">10 Sessions (2hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 1,500K</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unlimited -->
+          <div class="price-card bg-[#111111] p-6 shadow-md card-hover border border-brand-border">
+            <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-infinity"></i> UNLIMITED PACKAGES</div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">1 Week</span>
+                <span class="text-brand-red font-bold text-sm">Rp 700K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border highlight-row px-2">
+                <span class="text-white text-sm font-medium">2 Weeks</span>
+                <span class="text-brand-red font-bold text-sm">Rp 1,200K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">1 Month</span>
+                <span class="text-brand-red font-bold text-sm">Rp 1,600K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border highlight-row px-2">
+                <span class="text-white text-sm font-medium">3 Months</span>
+                <span class="text-brand-red font-bold text-sm">Rp 4,200K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">6 Months</span>
+                <span class="text-brand-red font-bold text-sm">Rp 7,500K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 highlight-row px-2">
+                <span class="text-white text-sm font-medium">1 Year</span>
+                <span class="text-brand-red font-bold text-sm">Rp 12,000K</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- LOCAL PRICES -->
+      <div x-show="tab==='local'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <div class="price-card bg-[#111111] p-6 shadow-md card-hover border border-brand-border">
+            <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-dumbbell"></i> DROP-IN SESSIONS</div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <div><div class="font-semibold text-white text-sm">Half Session (1hr)</div></div>
+                <div class="text-brand-red font-bold text-sm">Rp 60K</div>
+              </div>
+              <div class="flex justify-between items-center py-2 highlight-row px-2">
+                <div><div class="font-semibold text-white text-sm">Full Session (2hr)</div></div>
+                <div class="text-brand-red font-bold text-sm">Rp 90K</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="price-card bg-[#111111] p-6 shadow-md card-hover border border-brand-border">
+            <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-ticket"></i> SESSION PACKAGES</div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">5 Sessions (1hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 275K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border highlight-row px-2">
+                <span class="text-white text-sm font-medium">5 Sessions (2hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 400K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">10 Sessions (1hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 500K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 highlight-row px-2">
+                <span class="text-white text-sm font-medium">10 Sessions (2hr)</span>
+                <span class="text-brand-red font-bold text-sm">Rp 750K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="price-card bg-[#111111] p-6 shadow-md card-hover border border-brand-border">
+            <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-infinity"></i> UNLIMITED PACKAGES</div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">1 Week</span>
+                <span class="text-brand-red font-bold text-sm">Rp 250K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border highlight-row px-2">
+                <span class="text-white text-sm font-medium">1 Month</span>
+                <span class="text-brand-red font-bold text-sm">Rp 550K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border">
+                <span class="text-white text-sm font-medium">3 Months</span>
+                <span class="text-brand-red font-bold text-sm">Rp 1,400K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-brand-border highlight-row px-2">
+                <span class="text-white text-sm font-medium">6 Months</span>
+                <span class="text-brand-red font-bold text-sm">Rp 2,500K</span>
+              </div>
+              <div class="flex justify-between items-center py-2 highlight-row px-2">
+                <span class="text-white text-sm font-medium">1 Year</span>
+                <span class="text-brand-red font-bold text-sm">Rp 4,500K</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mt-10 text-center fade-up">
+        <a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20inquire%20about%20membership" target="_blank" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp"></i> BOOK A SESSION VIA WHATSAPP
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section id="about" class="py-20 bg-brand-dark">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div class="fade-up order-2 md:order-1">
+        <p class="text-brand-red text-xs font-bold tracking-widest mb-3">WHO WE ARE</p>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-2"><span class="section-border-bottom pb-1">ABOUT US</span></h2>
+        <div class="w-16 h-1 bg-brand-red mt-4 mb-6"></div>
+        <p class="text-gray-300 leading-relaxed mb-4">
+          <strong class="text-white">Kona Fight Camp</strong> is not built around Instagram fitness trends or commercial gym culture. Our focus is authentic Muay Thai, real fight knowledge, and raising the standard of Muay Thai in Indonesia.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-4">
+          Our coaches bring over 20 years of Muay Thai experience, having lived, trained, and competed professionally in Thailand under experienced Thai trainers.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-4">
+          We built Kona Fight Camp to create an environment with genuine athlete development pathways, catering to all levels — from complete beginners and casual practitioners to active fighters and professional athletes.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-4">
+          We follow the same structured daily training system used throughout Thailand and offer both half and full training sessions. Half sessions are designed for beginners, casual members, and those focused on fitness and technique, while full sessions include daily sparring and clinching for more experienced practitioners looking to push themselves and develop at a higher level.
+        </p>
+        <p class="text-white font-semibold leading-relaxed mb-1">
+          This is real Muay Thai, done properly.
+        </p>
+        <p class="text-brand-red font-extrabold tracking-wide leading-relaxed mb-6">
+          No gimmicks. No shortcuts.
+        </p>
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
+            <i class="fa-solid fa-user-tie text-brand-red text-xl mb-2"></i>
+            <div class="text-white font-bold text-sm">Pro Coaches</div>
+            <div class="text-gray-400 text-xs mt-1">Certified & experienced Muay Thai trainers</div>
+          </div>
+          <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
+            <i class="fa-solid fa-users text-brand-red text-xl mb-2"></i>
+            <div class="text-white font-bold text-sm">All Levels</div>
+            <div class="text-gray-400 text-xs mt-1">Beginners to advanced fighters welcome</div>
+          </div>
+          <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
+            <i class="fa-solid fa-location-dot text-brand-red text-xl mb-2"></i>
+            <div class="text-white font-bold text-sm">North Canggu, Bali</div>
+            <div class="text-gray-400 text-xs mt-1">Train in the heart of Canggu</div>
+          </div>
+          <div class="bg-[#111111] p-4 border border-brand-border shadow-md">
+            <i class="fa-solid fa-clock text-brand-red text-xl mb-2"></i>
+            <div class="text-white font-bold text-sm">Daily Sessions</div>
+            <div class="text-gray-400 text-xs mt-1">Morning & evening training available</div>
+          </div>
+        </div>
+        <a href="#contact" class="btn-red px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+          <i class="fa-solid fa-envelope"></i> GET IN TOUCH
+        </a>
+      </div>
+      <div class="fade-up order-1 md:order-2">
+        <img src="{{ asset('img/logo.png') }}" alt="About Kona Fight Camp" class="w-full shadow-md border border-brand-border object-cover max-h-[520px]"/>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COACHES ===== -->
+<section id="coaches" class="py-20 bg-brand-dark">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="section-heading mb-12 fade-up">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">THE TEAM</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-white"><span>MEET RICO</span></h2>
+      <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <!-- Rico photos: replace ./img/rico-1..3.jpeg with real photos of Rico. Each falls back to an existing photo until you add the files. -->
+      <div class="fade-up grid grid-cols-2 gap-4">
+        <img src="{{ asset('img/rico-1.jpeg') }}" onerror="this.onerror=null;this.src='{{ asset('img/img2.jpeg') }}'" alt="Rico — Head Coach at Kona Fight Camp" class="col-span-2 w-full h-72 object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="{{ asset('img/rico-2.jpeg') }}" onerror="this.onerror=null;this.src='{{ asset('img/img3.jpeg') }}'" alt="Rico training Muay Thai" class="w-full h-44 object-cover shadow-md border border-brand-border card-hover"/>
+        <img src="{{ asset('img/rico-3.jpeg') }}" onerror="this.onerror=null;this.src='{{ asset('img/img4.jpeg') }}'" alt="Rico coaching at Kona Fight Camp" class="w-full h-44 object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+      <div class="fade-up">
+        <p class="text-brand-red text-xs font-bold tracking-widest mb-3">HEAD COACH</p>
+        <h3 class="text-3xl font-extrabold text-white mb-4">Rico</h3>
+        <!-- TODO: replace with Rico's full bio -->
+        <p class="text-gray-300 leading-relaxed mb-4">
+          Rico leads the coaching at Kona Fight Camp. Our coaches bring over 20 years of Muay Thai experience, having lived, trained, and competed professionally in Thailand under experienced Thai trainers.
+        </p>
+        <p class="text-gray-400 leading-relaxed mb-6">
+          His sessions follow the same structured daily training system used throughout Thailand — building real fight knowledge and technique for everyone from complete beginners to professional athletes.
+        </p>
+        <a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20train%20with%20Rico" target="_blank" class="btn-red px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp"></i> TRAIN WITH RICO
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section id="gallery" class="py-20 bg-[#0a0a0a]">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="section-heading mb-12 fade-up">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">INSIDE THE CAMP</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-white"><span>GALLERY</span></h2>
+      <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="fade-up col-span-2 md:col-span-2 row-span-1">
+        <img src="{{ asset('img/img1.jpeg') }}" alt="Gallery 1" class="w-full h-full md:h-72 object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+      <div class="fade-up">
+        <img src="{{ asset('img/img2.jpeg') }}" alt="Gallery 2" class="w-full h-full md:h-72 object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+      <div class="fade-up">
+        <img src="{{ asset('img/img3.jpeg') }}" alt="Gallery 3" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+      <div class="fade-up">
+        <img src="{{ asset('img/img4.jpeg') }}" alt="Gallery 4" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+      <div class="fade-up">
+        <img src="{{ asset('img/img5.jpeg') }}" alt="Gallery 5" class="w-full h-full object-cover shadow-md border border-brand-border card-hover"/>
+      </div>
+    </div>
+    <div class="text-center mt-8 fade-up">
+      <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="btn-outline px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+        <i class="fa-brands fa-instagram text-brand-red"></i> MORE ON INSTAGRAM
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section id="contact" class="py-20 bg-brand-dark">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="section-heading mb-12 fade-up">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">REACH US</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-white"><span>CONTACT</span></h2>
+      <div class="w-16 h-1 bg-brand-red mt-3"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <!-- Info -->
+      <div class="fade-up space-y-6">
+        <div class="bg-[#111111] p-6 border border-brand-border shadow-md flex gap-4 items-start">
+          <i class="fa-solid fa-location-dot text-brand-red text-xl mt-1"></i>
+          <div>
+            <div class="text-white font-bold mb-1">ADDRESS</div>
+            <a href="https://www.google.com/maps/search/?api=1&query=Kona+Fight+Camp+North+Canggu+Bali" target="_blank" class="text-gray-400 text-sm leading-relaxed hover:text-brand-red transition-colors cursor-pointer">Kona Fight Camp, North Canggu, Bali, Indonesia</a>
+          </div>
+        </div>
+        <div class="bg-[#111111] p-6 border border-brand-border shadow-md flex gap-4 items-start">
+          <i class="fa-brands fa-instagram text-brand-red text-xl mt-1"></i>
+          <div>
+            <div class="text-white font-bold mb-1">INSTAGRAM</div>
+            <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">@konafightcamp</a>
+          </div>
+        </div>
+        <div class="bg-[#111111] p-6 border border-brand-border shadow-md flex gap-4 items-start">
+          <i class="fa-brands fa-whatsapp text-brand-red text-xl mt-1"></i>
+          <div>
+            <div class="text-white font-bold mb-1">WHATSAPP</div>
+            <a href="https://wa.me/628112500225" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">+62 811-2500-225</a>
+          </div>
+        </div>
+        <a href="https://www.google.com/maps/search/?api=1&query=Kona+Fight+Camp+North+Canggu+Bali" target="_blank" class="block bg-[#111111] p-6 border border-brand-border shadow-md card-hover cursor-pointer">
+          <!-- <img src="./img/img-1.png" alt="Kona Fight Camp location — North Canggu, Bali" class="w-full h-40 object-cover shadow-md border border-brand-border"/> -->
+          
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3652.0084249140455!2d115.17056489999999!3d-8.616572699999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd239f0b0afcb57%3A0xfcdb7cfde7279bdd!2sBagoes%20Kitchen%20-%20Coffee%20%26%20Resto!5e1!3m2!1sid!2sid!4v1781681739555!5m2!1sid!2sid" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+          <div class="text-brand-red text-xs mt-3 text-center font-semibold tracking-widest hover:underline"><i class="fa-solid fa-location-dot mr-1"></i> VIEW ON GOOGLE MAPS — NORTH CANGGU, BALI</div>
+        </a>
+      </div>
+      <!-- Contact Form -->
+      <div class="fade-up">
+        <div class="bg-[#111111] p-8 border border-brand-border shadow-md">
+          <h3 class="text-white font-extrabold text-lg mb-6 section-border-bottom pb-2">SEND US A MESSAGE</h3>
+          <div x-data="contactForm()" class="space-y-4">
+            <div>
+              <label class="text-gray-400 text-xs font-semibold tracking-widest block mb-2">YOUR NAME</label>
+              <input x-model="name" type="text" placeholder="John Doe" class="w-full bg-brand-dark border border-brand-border text-white placeholder-gray-600 px-4 py-3 text-sm focus:outline-none focus:border-brand-red transition-colors"/>
+            </div>
+            <div>
+              <label class="text-gray-400 text-xs font-semibold tracking-widest block mb-2">PHONE / EMAIL</label>
+              <input x-model="contact" type="text" placeholder="+62 8xx / email@example.com" class="w-full bg-brand-dark border border-brand-border text-white placeholder-gray-600 px-4 py-3 text-sm focus:outline-none focus:border-brand-red transition-colors"/>
+            </div>
+            <div>
+              <label class="text-gray-400 text-xs font-semibold tracking-widest block mb-2">MESSAGE</label>
+              <textarea x-model="message" rows="4" placeholder="Hi Kona Fight Camp, I'd like to know more about..." class="w-full bg-brand-dark border border-brand-border text-white placeholder-gray-600 px-4 py-3 text-sm focus:outline-none focus:border-brand-red transition-colors resize-none"></textarea>
+            </div>
+            <button @click="sendToWhatsApp()" class="btn-red w-full py-3 font-bold text-sm tracking-widest shadow-md flex items-center justify-center gap-2">
+              <i class="fa-brands fa-whatsapp"></i> SEND VIA WHATSAPP
+            </button>
+            <p class="text-gray-500 text-xs text-center">This will open WhatsApp with your message pre-filled.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-[#050505] border-t border-brand-border py-10">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <img src="https://easysyntax.github.io/placeholders/Square%20Post%201080%20x%201080.svg" alt="Logo" class="h-10 w-10 object-cover"/>
+          <span class="font-extrabold text-lg text-white"><span class="text-brand-red">KONA</span> FIGHT CAMP</span>
+        </div>
+        <p class="text-gray-500 text-sm leading-relaxed">Muay Thai • Boxing • Conditioning. Authentic. Affordable. Serious training.<br/><span class="inline-flex items-center gap-1 mt-2"><i class="fa-solid fa-location-dot text-brand-red"></i> North Canggu, Bali</span></p>
+      </div>
+      <div>
+        <div class="text-white font-bold text-xs tracking-widest mb-4 section-border-bottom pb-2">QUICK LINKS</div>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li><a href="#home" class="hover:text-brand-red transition-colors cursor-pointer">Home</a></li>
+          <li><a href="#prices" class="hover:text-brand-red transition-colors cursor-pointer">Prices</a></li>
+          <li><a href="#about" class="hover:text-brand-red transition-colors cursor-pointer">About</a></li>
+          <li><a href="#gallery" class="hover:text-brand-red transition-colors cursor-pointer">Gallery</a></li>
+          <li><a href="#contact" class="hover:text-brand-red transition-colors cursor-pointer">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-white font-bold text-xs tracking-widest mb-4 section-border-bottom pb-2">FOLLOW US</div>
+        <div class="flex gap-4">
+          <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
+            <i class="fa-brands fa-instagram"></i>
+          </a>
+          <a href="https://wa.me/628112500225" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
+            <i class="fa-brands fa-whatsapp"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="border-t border-brand-border pt-6 text-center text-gray-600 text-xs">
+      &copy; 2025 Kona Fight Camp. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<!-- ===== FLOATING BUTTONS ===== -->
+<!-- WhatsApp FAB -->
+<a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp!" target="_blank"
+   class="fixed bottom-20 right-5 z-50 w-12 h-12 bg-green-600 flex items-center justify-center text-white text-xl shadow-md hover:bg-green-500 transition-colors cursor-pointer" title="Chat on WhatsApp">
+  <i class="fa-brands fa-whatsapp"></i>
+</a>
+<!-- Back to Top -->
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  class="fixed bottom-5 right-5 z-50 w-12 h-12 btn-red flex items-center justify-center text-white text-lg shadow-md opacity-0 transition-opacity duration-300 cursor-pointer" title="Back to Top">
+  <i class="fa-solid fa-chevron-up"></i>
+</button>
+
+<!-- Google Translate Script -->
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,id',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,id',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element_mobile');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<script>
+  function app() {
+    return {
+      darkMode: document.documentElement.classList.contains('dark'),
+      showDisclaimer: true,
+      init() {
+        // Keep the <html> class in sync and remember the choice across visits.
+        this.$watch('darkMode', (value) => {
+          document.documentElement.classList.toggle('dark', value);
+          try { localStorage.setItem('theme', value ? 'dark' : 'light'); } catch (e) {}
+        });
+      },
+    }
+  }
+
+  // Hero background slideshow (img1–img5) with crossfade; zoom in/out handled by CSS
+  function heroSlider() {
+    return {
+      images: ['{{ asset('img/img1.jpeg') }}', '{{ asset('img/img2.jpeg') }}', '{{ asset('img/img3.jpeg') }}', '{{ asset('img/img4.jpeg') }}', '{{ asset('img/img5.jpeg') }}'],
+      current: 0,
+      init() {
+        setInterval(() => { this.current = (this.current + 1) % this.images.length; }, 5000);
+      }
+    }
+  }
+
+  function contactForm() {
+    return {
+      name: '',
+      contact: '',
+      message: '',
+      sendToWhatsApp() {
+        const text = `Hi Kona Fight Camp!%0A%0AName: ${encodeURIComponent(this.name)}%0AContact: ${encodeURIComponent(this.contact)}%0AMessage: ${encodeURIComponent(this.message)}`;
+        window.open(`https://wa.me/628112500225?text=${text}`, '_blank');
+      }
+    }
+  }
+
+  // Scroll animations
+  const fadeEls = document.querySelectorAll('.fade-up');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if(el.isIntersecting) { el.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  fadeEls.forEach(el => observer.observe(el));
+
+  // Navbar shrink + back to top
+  const navbar = document.getElementById('navbar');
+  const backTop = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    if(window.scrollY > 60) { navbar.classList.add('scrolled'); backTop.style.opacity = '1'; }
+    else { navbar.classList.remove('scrolled'); backTop.style.opacity = '0'; }
+  });
+</script>
+</body>
+</html>

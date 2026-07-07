@@ -40,16 +40,27 @@
             </label>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="mt-6">
+            <x-primary-button class="w-full justify-center">
+                <i class="fa-solid fa-right-to-bracket"></i> {{ __('Log in') }}
+            </x-primary-button>
+        </div>
+
+        @if (Route::has('register'))
+            <div class="mt-3">
+                <a href="{{ route('register') }}"
+                   class="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 bg-white border border-zinc-200 rounded-2xl font-semibold text-sm text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <i class="fa-solid fa-user-plus"></i> {{ __('Register') }}
+                </a>
+            </div>
+        @endif
+
+        <div class="flex items-center justify-center gap-4 mt-6 text-sm">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-zinc-600 hover:text-zinc-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" href="{{ route('password.request') }}">
+                <a class="underline text-zinc-600 hover:text-zinc-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
-
-            <x-primary-button class="ms-3">
-                <i class="fa-solid fa-right-to-bracket"></i> {{ __('Log in') }}
-            </x-primary-button>
         </div>
     </form>
 </x-guest-layout>

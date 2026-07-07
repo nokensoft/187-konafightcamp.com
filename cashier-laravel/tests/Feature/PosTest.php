@@ -29,7 +29,7 @@ class PosTest extends TestCase
         $response = $this->actingAs($manager)->get('/pos');
 
         $response->assertOk();
-        $response->assertSee('FitHub');
+        $response->assertSee('Kona Fight Camp');
         $response->assertSee('Recent Activity');
         $response->assertSee('Monthly Premium'); // catalog data injected from JSON
         $response->assertSee('Trash');            // manager recycle-bin partial present

@@ -1,3 +1,12 @@
+@props(['maxWidth' => 'md'])
+@php
+    $maxWidthClass = [
+        'md' => 'sm:max-w-md',
+        'lg' => 'sm:max-w-lg',
+        '2xl' => 'sm:max-w-2xl',
+        '3xl' => 'sm:max-w-3xl',
+    ][$maxWidth] ?? 'sm:max-w-md';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -21,9 +30,14 @@
                 <p class="text-zinc-400 text-sm">Multi-Unit POS</p>
             </a>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-6 bg-white border border-zinc-100 shadow-sm overflow-hidden rounded-3xl">
+            <div class="w-full {{ $maxWidthClass }} mt-6 px-6 py-6 bg-white border border-zinc-100 shadow-sm overflow-hidden rounded-3xl">
                 {{ $slot }}
             </div>
+
+            <a href="{{ route('home') }}"
+               class="mt-6 inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded-md">
+                <i class="fa-solid fa-arrow-left-long"></i> {{ __('Back to Home') }}
+            </a>
         </div>
     </body>
 </html>

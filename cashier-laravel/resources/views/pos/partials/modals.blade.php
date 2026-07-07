@@ -1,59 +1,141 @@
 <!-- ============ MODALS (Alpine + Tailwind) ============ -->
 
-<!-- Register New Member -->
+<!-- Register New Member (manager: creates a login account + gym profile) -->
 <div x-show="memberModal.open" x-cloak x-transition.opacity
      @click.self="memberModal.open = false" @keydown.escape.window="memberModal.open = false"
      class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-    <div x-show="memberModal.open" x-transition class="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div x-show="memberModal.open" x-transition class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="p-6 sm:p-8">
-            <h3 class="text-xl font-semibold mb-6">Register New Member</h3>
+            <h3 class="text-xl font-semibold mb-1">Register New Member</h3>
+            <p class="text-sm text-zinc-400 mb-6">Creates a member login (email &amp; password) and gym profile.</p>
+
+            <!-- Validation errors -->
+            <div x-show="memberModal.errors.length" x-cloak class="mb-5 bg-red-50 border border-red-100 text-red-700 rounded-2xl px-5 py-4 text-sm">
+                <ul class="list-disc list-inside space-y-1">
+                    <template x-for="(msg, i) in memberModal.errors" :key="i">
+                        <li x-text="msg"></li>
+                    </template>
+                </ul>
+            </div>
+
             <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-zinc-600 mb-2">Full Name</label>
+                    <label class="block text-sm font-medium text-zinc-600 mb-2">Full Name *</label>
                     <input x-model="memberModal.name" placeholder="e.g. Budi Santoso" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                </div>
+
+                <!-- Auth info -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Email *</label>
+                        <input x-model="memberModal.email" type="email" placeholder="member@example.com" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Password *</label>
+                        <input x-model="memberModal.password" type="password" autocomplete="new-password" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Confirm *</label>
+                        <input x-model="memberModal.password_confirmation" type="password" autocomplete="new-password" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-zinc-600 mb-2">Gender</label>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Phone / WhatsApp *</label>
+                        <input x-model="memberModal.phone" placeholder="e.g. 62812xxxxxxx" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Date of Birth</label>
+                        <input x-model="memberModal.dateOfBirth" type="date" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Gender *</label>
                         <select x-model="memberModal.gender" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-zinc-600 mb-2">Registration Date</label>
-                        <input x-model="memberModal.registrationDate" type="date" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-zinc-600 mb-2">Type</label>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Type *</label>
                         <select x-model="memberModal.type" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
                             <option value="Local">Local / Indonesian</option>
                             <option value="Tourist">Tourist</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-zinc-600 mb-2">Membership Package</label>
                         <select x-model="memberModal.package" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                            <option value="">— Assign later —</option>
                             <template x-for="p in membershipPackages" :key="p">
                                 <option x-text="p"></option>
                             </template>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2"
+                               x-text="memberModal.type === 'Tourist' ? 'ID Number (Passport) *' : 'ID Number (KTP) *'"></label>
+                        <input x-model="memberModal.idNumber" placeholder="KTP / Passport number" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
                 </div>
 
+                <!-- KTP / ID Photo upload -->
                 <div>
                     <label class="block text-sm font-medium text-zinc-600 mb-2"
-                           x-text="memberModal.type === 'Tourist' ? 'ID Number (Passport)' : 'ID Number (KTP)'"></label>
-                    <input x-model="memberModal.idNumber" placeholder="KTP / Passport number" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                           x-text="memberModal.type === 'Tourist' ? 'Passport Photo (optional)' : 'KTP / ID Photo (optional)'"></label>
+
+                    <!-- Drop zone (shown when no preview) -->
+                    <div x-show="!memberModal.idPhotoPreview"
+                         @dragover.prevent="memberModal.idPhotoDragging = true"
+                         @dragleave.prevent="memberModal.idPhotoDragging = false"
+                         @drop.prevent="memberModal.idPhotoDragging = false; handleIdPhotoFile($event.dataTransfer.files[0])"
+                         @click="$refs.idPhotoInput.click()"
+                         :class="memberModal.idPhotoDragging ? 'border-red-400 bg-red-50' : 'border-zinc-200 bg-zinc-50 hover:border-red-300 hover:bg-red-50/40'"
+                         class="w-full border-2 border-dashed rounded-3xl px-6 py-8 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors">
+                        <i class="fa-solid fa-id-card text-2xl text-zinc-300"></i>
+                        <p class="text-sm text-zinc-400 text-center">
+                            <span class="font-medium text-zinc-600">Click to upload</span> or drag &amp; drop<br>
+                            <span class="text-xs">JPG, PNG, WEBP — max 2 MB</span>
+                        </p>
+                    </div>
+
+                    <!-- Preview (shown after file selected) -->
+                    <div x-show="memberModal.idPhotoPreview" class="relative rounded-3xl overflow-hidden border border-zinc-200">
+                        <img :src="memberModal.idPhotoPreview" alt="ID Preview"
+                             class="w-full max-h-48 object-cover">
+                        <button type="button"
+                                @click="clearIdPhoto()"
+                                class="absolute top-2 right-2 w-8 h-8 bg-white/90 hover:bg-white text-zinc-600 hover:text-red-600 rounded-full flex items-center justify-center shadow transition">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- Hidden file input -->
+                    <input id="idPhotoInput" x-ref="idPhotoInput" type="file" accept="image/*"
+                           class="hidden"
+                           @change="handleIdPhotoFile($event.target.files[0])">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-zinc-600 mb-2">Address</label>
                     <textarea x-model="memberModal.address" rows="2" placeholder="Street, city, country" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300 resize-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Emergency Contact Name</label>
+                        <input x-model="memberModal.emergencyContactName" placeholder="e.g. Siti" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Emergency Contact Phone</label>
+                        <input x-model="memberModal.emergencyContactPhone" placeholder="e.g. 62812xxxxxxx" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    </div>
                 </div>
 
                 <div>
@@ -62,11 +144,12 @@
                 </div>
             </div>
             <div class="mt-8 flex gap-4">
-                <button @click="memberModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2">
+                <button @click="memberModal.open = false" :disabled="memberModal.saving" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2 disabled:opacity-50">
                     <i class="fa-solid fa-xmark"></i> Cancel
                 </button>
-                <button @click="saveMember()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-plus"></i> Save Member
+                <button @click="saveMember()" :disabled="memberModal.saving" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2 disabled:opacity-50">
+                    <i class="fa-solid" :class="memberModal.saving ? 'fa-circle-notch fa-spin' : 'fa-user-plus'"></i>
+                    <span x-text="memberModal.saving ? 'Saving…' : 'Save Member'"></span>
                 </button>
             </div>
         </div>

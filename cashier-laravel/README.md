@@ -14,14 +14,23 @@ relational database + CRUD layer is intentionally deferred to Phase 2.
 - UI language: **English**; currency: **Rupiah (Rp)**
 
 ## Roles
-Two roles on the `users.role` column, enforced by the `role` middleware
+Three roles on the `users.role` column, enforced by the `role` middleware
 (`App\Http\Middleware\EnsureUserHasRole`) and the `isManager` flag in the UI:
-- **manager** — full access: inventory & category management, member management, and the **Trash** (recycle bin).
+- **manager** — full access: inventory & category management, member management (incl. creating member logins), and the **Trash** (recycle bin).
 - **cashier** — Dashboard + POS terminal, with read-only Members/Inventory.
+- **member** — no POS access; gets a separate **member portal** (`/member`) with a top-nav layout (no fixed sidebar) showing their membership status and the gym catalog.
+
+Staff (manager/cashier) land on the POS (`/pos`); members are routed to the member portal. `/pos` is restricted to manager + cashier; `/member` is restricted to members.
+
+### Member accounts & registration
+- Public self-registration (`/register`) collects the full member profile (name, email, phone/WhatsApp, gender, DOB, ID/KTP, address, emergency contact) plus a required Terms & Conditions checkbox, and creates a `member` login + linked `members` row.
+- Managers can also create members (login + profile) from the POS **Members** tab.
+- Members sign in with email + password. Password resets are not self-service: the **Forgot password** page and portal link members to the admin via WhatsApp (`ADMIN_WHATSAPP` in `.env`).
 
 ### Demo accounts (password: `password`)
 - Manager — `manager@kfc.test`
 - Cashier — `cashier@kfc.test`
+- Member — `member@kfc.test`
 
 ## Features
 - Multi-unit (Gym / Store / Kitchen) switcher
