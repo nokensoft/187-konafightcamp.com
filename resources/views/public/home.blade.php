@@ -636,7 +636,8 @@
 
 <!-- ===== FLOATING BUTTONS ===== -->
 <!-- WhatsApp FAB -->
-<a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp!" target="_blank"
+{{-- 6285119339311 --}}
+<a href="https://wa.me/6285119339311?text=Hi%20Kona%20Fight%20Camp!" target="_blank"
    class="fixed bottom-20 right-5 z-50 w-12 h-12 bg-green-600 flex items-center justify-center text-white text-xl shadow-md hover:bg-green-500 transition-colors cursor-pointer" title="Chat on WhatsApp">
   <i class="fa-brands fa-whatsapp"></i>
 </a>
