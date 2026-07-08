@@ -394,7 +394,7 @@
       </div>
 
       <div class="mt-10 text-center fade-up">
-        <a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20inquire%20about%20membership" target="_blank" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+        <a href="https://wa.me/6285119339311?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20inquire%20about%20membership" target="_blank" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
           <i class="fa-brands fa-whatsapp"></i> BOOK A SESSION VIA WHATSAPP
         </a>
       </div>
@@ -486,7 +486,7 @@
         <p class="text-gray-400 leading-relaxed mb-6">
           His sessions follow the same structured daily training system used throughout Thailand — building real fight knowledge and technique for everyone from complete beginners to professional athletes.
         </p>
-        <a href="https://wa.me/628112500225?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20train%20with%20Rico" target="_blank" class="btn-red px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+        <a href="https://wa.me/6285119339311?text=Hi%20Kona%20Fight%20Camp%2C%20I%27d%20like%20to%20train%20with%20Rico" target="_blank" class="btn-red px-7 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
           <i class="fa-brands fa-whatsapp"></i> TRAIN WITH RICO
         </a>
       </div>
@@ -556,7 +556,7 @@
           <i class="fa-brands fa-whatsapp text-brand-red text-xl mt-1"></i>
           <div>
             <div class="text-white font-bold mb-1">WHATSAPP</div>
-            <a href="https://wa.me/628112500225" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">+62 811-2500-225</a>
+            <a href="https://wa.me/6285119339311" target="_blank" class="text-brand-red text-sm hover:underline cursor-pointer">+62 851-1933-9311</a>
           </div>
         </div>
         <a href="https://www.google.com/maps/search/?api=1&query=Kona+Fight+Camp+North+Canggu+Bali" target="_blank" class="block bg-[#111111] p-6 border border-brand-border shadow-md card-hover cursor-pointer">
@@ -622,7 +622,7 @@
           <a href="https://www.instagram.com/konafightcamp/" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
             <i class="fa-brands fa-instagram"></i>
           </a>
-          <a href="https://wa.me/628112500225" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
+          <a href="https://wa.me/6285119339311" target="_blank" class="w-10 h-10 bg-[#111111] border border-brand-border flex items-center justify-center text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors shadow-md cursor-pointer">
             <i class="fa-brands fa-whatsapp"></i>
           </a>
         </div>
@@ -699,7 +699,7 @@ function googleTranslateElementInit() {
       message: '',
       sendToWhatsApp() {
         const text = `Hi Kona Fight Camp!%0A%0AName: ${encodeURIComponent(this.name)}%0AContact: ${encodeURIComponent(this.contact)}%0AMessage: ${encodeURIComponent(this.message)}`;
-        window.open(`https://wa.me/628112500225?text=${text}`, '_blank');
+        window.open(`https://wa.me/6285119339311?text=${text}`, '_blank');
       }
     }
   }
