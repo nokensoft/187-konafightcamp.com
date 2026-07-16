@@ -15,4 +15,21 @@ return [
 
     'whatsapp' => env('ADMIN_WHATSAPP', '6281234567890'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Bank transfer (simulation)
+    |--------------------------------------------------------------------------
+    |
+    | Simulated bank account shown to members/staff when paying for a package.
+    | These are placeholders for the prototype — override them in your .env.
+    |
+    */
+
+    'bank' => [
+        'name' => env('BANK_NAME', 'Bank Mandiri'),
+        'account_number' => env('BANK_ACCOUNT_NUMBER', '1370-0012-3456-7'),
+        'account_holder' => env('BANK_ACCOUNT_HOLDER', 'PT Kona Fight Camp'),
+        'branch' => env('BANK_BRANCH', 'KCP Denpasar Renon'),
+    ],
+
 ];

@@ -4,6 +4,8 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -55,6 +57,8 @@ class RegistrationTest extends TestCase
         $this->assertNotNull($user->member);
         $this->assertSame('628123456789', $user->member->phone);
         $this->assertNotNull($user->member->terms_accepted_at);
+        // Public self-registration is pending until staff verify it.
+        $this->assertNull($user->member->verified_at);
     }
 
     public function test_registration_requires_accepting_terms(): void
@@ -62,6 +66,34 @@ class RegistrationTest extends TestCase
         $response = $this->post('/register', $this->validPayload(['terms' => null]));
 
         $response->assertSessionHasErrors('terms');
+        $this->assertGuest();
+    }
+
+    public function test_new_users_can_upload_an_id_photo(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->post('/register', $this->validPayload([
+            'id_photo' => UploadedFile::fake()->image('ktp.jpg'),
+        ]));
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+
+        $member = User::where('email', 'test@example.com')->first()->member;
+        $this->assertNotNull($member->id_photo_path);
+        Storage::disk('public')->assertExists($member->id_photo_path);
+    }
+
+    public function test_registration_rejects_invalid_id_photo(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->post('/register', $this->validPayload([
+            'id_photo' => UploadedFile::fake()->create('malware.exe', 100),
+        ]));
+
+        $response->assertSessionHasErrors('id_photo');
         $this->assertGuest();
     }
 }

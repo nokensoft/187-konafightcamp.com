@@ -43,13 +43,18 @@ class RegisteredUserController extends Controller
             'date_of_birth' => ['nullable', 'date', 'before:today'],
             'id_type' => ['required', Rule::in(['KTP', 'Passport'])],
             'id_number' => ['required', 'string', 'max:50'],
+            'id_photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
             'address' => ['nullable', 'string', 'max:1000'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
             'terms' => ['accepted'],
         ]);
 
-        $user = DB::transaction(function () use ($validated) {
+        // Store the uploaded ID/KTP document on the public disk so it is
+        // reachable via the storage symlink (see Member::toPosArray()).
+        $idPhotoPath = $request->file('id_photo')?->store('id-photos', 'public');
+
+        $user = DB::transaction(function () use ($validated, $idPhotoPath) {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -66,6 +71,7 @@ class RegisteredUserController extends Controller
                 'date_of_birth' => $validated['date_of_birth'] ?? null,
                 'id_type' => $validated['id_type'],
                 'id_number' => $validated['id_number'],
+                'id_photo_path' => $idPhotoPath,
                 'address' => $validated['address'] ?? null,
                 'emergency_contact_name' => $validated['emergency_contact_name'] ?? null,
                 'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
@@ -73,6 +79,8 @@ class RegisteredUserController extends Controller
                 'membership_type' => $validated['id_type'] === 'Passport' ? 'Tourist' : 'Local',
                 'registration_date' => Carbon::today(),
                 'terms_accepted_at' => now(),
+                // verified_at is intentionally left null: self-registered members are
+                // "pending" until a manager/cashier verifies them from the POS.
             ]);
 
             return $user;

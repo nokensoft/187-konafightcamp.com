@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(CatalogSeeder::class);
+
         User::factory()->manager()->create([
             'name' => 'Manager',
             'email' => 'manager@kfc.test',
@@ -47,6 +49,34 @@ class DatabaseSeeder extends Seeder
             'registration_date' => now()->subMonth()->toDateString(),
             'expiry_date' => now()->addMonth()->toDateString(),
             'terms_accepted_at' => now(),
+            'verified_at' => now(),
+        ]);
+
+        // A pending self-registered member (no package/expiry, not yet verified)
+        // so the manager/cashier "Verify" flow is visible right after seeding.
+        $pending = User::factory()->member()->create([
+            'name' => 'Pending Member',
+            'email' => 'pending@kfc.test',
+        ]);
+
+        Member::create([
+            'user_id' => $pending->id,
+            'member_code' => Member::codeForUser($pending->id),
+            'phone' => '6281200000202',
+            'gender' => 'Female',
+            'date_of_birth' => '1998-09-12',
+            'id_type' => 'KTP',
+            'id_number' => '3204150998020202',
+            'address' => 'Jl. Pantai Berawa No. 5, Canggu, Bali',
+            'emergency_contact_name' => 'Dewi',
+            'emergency_contact_phone' => '6281200000888',
+            'membership_type' => 'Local',
+            'registration_date' => now()->toDateString(),
+            'terms_accepted_at' => now(),
+            // Submitted a transfer proof for a package; awaiting staff verification.
+            'requested_package' => 'Monthly Premium',
+            'payment_proof_path' => 'payment-proofs/sample-transfer.jpg',
+            'payment_submitted_at' => now(),
         ]);
     }
 }

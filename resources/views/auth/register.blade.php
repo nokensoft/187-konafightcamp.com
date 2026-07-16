@@ -4,7 +4,7 @@
         <p class="text-zinc-500 text-sm mt-1">Join Kona Fight Camp. Fields marked * are required.</p>
     </div>
 
-    <form method="POST" action="{{ route('register') }}" x-data="{ idType: '{{ old('id_type', 'KTP') }}' }">
+    <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" x-data="{ idType: '{{ old('id_type', 'KTP') }}' }">
         @csrf
 
         <!-- Account -->
@@ -77,6 +77,81 @@
             </x-input-label>
             <x-text-input id="id_number" class="block mt-1 w-full" type="text" name="id_number" :value="old('id_number')" required placeholder="ID / KTP / Passport number" />
             <x-input-error :messages="$errors->get('id_number')" class="mt-2" />
+        </div>
+
+        <!-- ID / KTP photo upload with drag & drop (Alpine.js) -->
+        <div class="mt-4"
+             x-data="{
+                dragging: false,
+                fileName: '',
+                previewUrl: '',
+                error: '',
+                maxSize: 4 * 1024 * 1024,
+                accepted: ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'],
+                handleDrop(e) {
+                    this.dragging = false;
+                    const files = e.dataTransfer.files;
+                    if (! files.length) return;
+                    this.$refs.input.files = files;
+                    this.process(files[0]);
+                },
+                handleChange(e) {
+                    if (e.target.files.length) this.process(e.target.files[0]);
+                },
+                process(file) {
+                    this.error = '';
+                    if (! this.accepted.includes(file.type)) {
+                        this.error = 'File must be a JPG, PNG or PDF.';
+                        this.clearFile();
+                        return;
+                    }
+                    if (file.size > this.maxSize) {
+                        this.error = 'File is too large (max 4MB).';
+                        this.clearFile();
+                        return;
+                    }
+                    this.fileName = file.name;
+                    this.previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : '';
+                },
+                clearFile() {
+                    this.fileName = '';
+                    this.previewUrl = '';
+                    this.$refs.input.value = '';
+                },
+             }"
+             x-on:dragover.prevent="dragging = true"
+             x-on:dragleave.prevent="dragging = false"
+             x-on:drop.prevent="handleDrop($event)">
+            <x-input-label for="id_photo">
+                <span x-text="idType === 'Passport' ? 'Passport Photo' : 'KTP Photo'"></span>
+            </x-input-label>
+            <label for="id_photo"
+                   class="mt-1 flex flex-col items-center justify-center gap-2 px-6 py-8 border-2 border-dashed rounded-3xl cursor-pointer transition"
+                   :class="dragging ? 'border-red-500 bg-red-50' : 'border-zinc-300 hover:border-red-400'">
+                <template x-if="! fileName">
+                    <div class="text-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-zinc-400"></i>
+                        <p class="text-sm text-zinc-600 mt-2">Drag &amp; drop your ID here, or <span class="text-red-600 font-medium">browse</span></p>
+                        <p class="text-xs text-zinc-400 mt-1">JPG, PNG or PDF up to 4MB</p>
+                    </div>
+                </template>
+                <template x-if="fileName">
+                    <div class="text-center w-full">
+                        <template x-if="previewUrl">
+                            <img :src="previewUrl" alt="ID preview" class="mx-auto max-h-40 rounded-xl object-contain">
+                        </template>
+                        <template x-if="! previewUrl">
+                            <i class="fa-solid fa-file-lines text-3xl text-zinc-400"></i>
+                        </template>
+                        <p class="text-sm text-zinc-700 mt-2 truncate" x-text="fileName"></p>
+                        <button type="button" @click.prevent="clearFile()" class="text-xs text-red-600 hover:underline mt-1">Remove</button>
+                    </div>
+                </template>
+                <input id="id_photo" name="id_photo" type="file" accept="image/jpeg,image/png,application/pdf"
+                       class="hidden" x-ref="input" @change="handleChange($event)">
+            </label>
+            <p x-show="error" x-text="error" class="text-sm text-red-600 mt-2" style="display:none"></p>
+            <x-input-error :messages="$errors->get('id_photo')" class="mt-2" />
         </div>
 
         <div class="mt-4">

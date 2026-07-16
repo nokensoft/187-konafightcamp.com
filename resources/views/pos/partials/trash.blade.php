@@ -5,7 +5,7 @@
             <h2 class="text-2xl lg:text-3xl font-semibold">Trash</h2>
             <p class="text-zinc-400 text-sm mt-1">Deleted members and items. Restore them or remove permanently.</p>
         </div>
-        <button x-show="trashCount > 0" @click="emptyTrash()"
+        <button x-show="trashCount > 0" @click="askEmptyTrash()"
                 class="border border-zinc-300 text-zinc-600 px-6 py-3.5 rounded-3xl flex items-center gap-2 hover:bg-zinc-50">
             <i class="fa-solid fa-trash-can"></i> Empty Trash
         </button>
@@ -42,7 +42,7 @@
                                             class="px-4 py-2 text-xs rounded-2xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center gap-2">
                                         <i class="fa-solid fa-rotate-left"></i> Restore
                                     </button>
-                                    <button @click="purgeFromTrash(entry)"
+                                    <button @click="askPurge(entry)"
                                             class="px-4 py-2 text-xs rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 flex items-center gap-2">
                                         <i class="fa-solid fa-xmark"></i> Delete Permanently
                                     </button>

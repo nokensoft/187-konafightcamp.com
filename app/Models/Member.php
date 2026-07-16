@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends Model
 {
+    use SoftDeletes;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -30,6 +33,10 @@ class Member extends Model
         'expiry_date',
         'notes',
         'terms_accepted_at',
+        'verified_at',
+        'requested_package',
+        'payment_proof_path',
+        'payment_submitted_at',
     ];
 
     /**
@@ -44,6 +51,8 @@ class Member extends Model
             'registration_date' => 'date',
             'expiry_date' => 'date',
             'terms_accepted_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'payment_submitted_at' => 'datetime',
         ];
     }
 
@@ -74,6 +83,42 @@ class Member extends Model
     }
 
     /**
+     * Whether staff have verified this registrant. Public self-registration
+     * leaves this false until a manager/cashier verifies from the POS.
+     */
+    public function isVerified(): bool
+    {
+        return $this->verified_at !== null;
+    }
+
+    /**
+     * Whether the member has submitted a bank-transfer proof awaiting review.
+     */
+    public function hasSubmittedPayment(): bool
+    {
+        return $this->payment_submitted_at !== null;
+    }
+
+    /**
+     * High-level membership state for the portal / POS:
+     * - 'active'   : verified, has a package, and not expired
+     * - 'awaiting' : transfer proof submitted but not yet verified
+     * - 'pending'  : nothing paid/verified yet
+     */
+    public function paymentStatus(): string
+    {
+        if ($this->isVerified() && $this->membership_package && $this->isActive()) {
+            return 'active';
+        }
+
+        if ($this->hasSubmittedPayment() && ! $this->isVerified()) {
+            return 'awaiting';
+        }
+
+        return 'pending';
+    }
+
+    /**
      * Map this member to the shape the Alpine POS app expects for its table.
      *
      * @return array<string, mixed>
@@ -87,11 +132,18 @@ class Member extends Model
             'package' => $this->membership_package ?: 'Pending',
             'type' => $this->membership_type ?: 'Local',
             'idNumber' => $this->id_number ?: '',
-            'idPhotoUrl' => $this->id_photo_path ? asset('storage/' . $this->id_photo_path) : null,
+            'idPhotoUrl' => $this->id_photo_path ? asset('storage/'.$this->id_photo_path) : null,
             'address' => $this->address ?: '',
             'notes' => $this->notes ?: '',
             'registrationDate' => $this->registration_date?->format('d M Y') ?? '',
             'expiry' => $this->expiry_date?->format('d M Y') ?? 'Pending',
+            'verified' => $this->verified_at !== null,
+            'memberId' => $this->id,
+            'requestedPackage' => $this->requested_package ?: '',
+            'paymentProofUrl' => $this->payment_proof_path ? asset('storage/'.$this->payment_proof_path) : null,
+            'paymentSubmitted' => $this->payment_submitted_at !== null,
+            'paymentSubmittedDate' => $this->payment_submitted_at?->format('d M Y') ?? '',
+            'paymentStatus' => $this->paymentStatus(),
         ];
     }
 }

@@ -15,11 +15,13 @@
             </template>
             <template x-for="item in posItems" :key="item.id">
                 <div @click="addToCart(item)" class="bg-white border rounded-3xl p-4 cursor-pointer hover:border-red-300 transition-colors">
-                    <div class="h-28 bg-zinc-100 rounded-2xl mb-4 flex items-center justify-center text-5xl" x-text="item.emoji || '📦'"></div>
                     <div class="font-medium leading-tight" x-text="item.name"></div>
                     <div class="text-xs text-zinc-400" x-text="item.cat"></div>
                     <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
-                        <div class="text-lg font-semibold" x-text="formatRp(item.price)"></div>
+                        <div class="text-lg font-semibold">
+                            <span x-text="formatRp(effPrice(item))"></span>
+                            <span x-show="item.hasDiscount" x-cloak class="block text-xs text-zinc-400 line-through font-normal" x-text="formatRp(item.price)"></span>
+                        </div>
                         <button @click.stop="addToCart(item)" class="px-5 py-2 bg-red-600 text-white text-xs rounded-2xl flex items-center gap-1"><i class="fa-solid fa-plus"></i> Add</button>
                     </div>
                 </div>

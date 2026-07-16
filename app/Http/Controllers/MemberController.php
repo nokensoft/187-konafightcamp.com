@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -24,8 +25,7 @@ class MemberController extends Controller
      */
     public function dashboard(Request $request): View
     {
-        $gym = $this->gymData();
-        $catalog = collect($gym['catalog'] ?? []);
+        $catalog = $this->gymCatalog();
 
         $member = $request->user()->member;
 
@@ -34,6 +34,68 @@ class MemberController extends Controller
             'packages' => $catalog->where('cat', 'Membership')->values()->all(),
             'classes' => $catalog->whereIn('cat', ['Class Pass', 'Personal Training'])->values()->all(),
             'whatsapp' => config('contact.whatsapp'),
+            'bank' => config('contact.bank'),
+        ]);
+    }
+
+    /**
+     * Member submits a bank-transfer proof for a chosen package from the
+     * member portal. Stays "pending" until staff verify it.
+     */
+    public function submitPayment(Request $request): RedirectResponse
+    {
+        $member = $request->user()->member;
+
+        abort_unless($member !== null, 404);
+
+        $packages = $this->gymCatalog()
+            ->where('cat', 'Membership')
+            ->pluck('name')
+            ->all();
+
+        $validated = $request->validate([
+            'requested_package' => ['required', 'string', $packages ? Rule::in($packages) : 'string'],
+            'payment_proof' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+        ]);
+
+        $member->update([
+            'requested_package' => $validated['requested_package'],
+            'payment_proof_path' => $request->file('payment_proof')->store('payment-proofs', 'public'),
+            'payment_submitted_at' => now(),
+        ]);
+
+        return back()->with('status', 'payment-submitted');
+    }
+
+    /**
+     * Staff (manager/cashier) record a bank-transfer proof and/or intended
+     * package for a member from the POS. Returns the refreshed POS record.
+     */
+    public function uploadPayment(Request $request, Member $member): JsonResponse
+    {
+        $packages = $this->gymCatalog()
+            ->where('cat', 'Membership')
+            ->pluck('name')
+            ->all();
+
+        $validated = $request->validate([
+            'requested_package' => ['nullable', 'string', $packages ? Rule::in($packages) : 'string'],
+            'payment_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+        ]);
+
+        if (! empty($validated['requested_package'])) {
+            $member->requested_package = $validated['requested_package'];
+        }
+
+        if ($request->hasFile('payment_proof')) {
+            $member->payment_proof_path = $request->file('payment_proof')->store('payment-proofs', 'public');
+            $member->payment_submitted_at = now();
+        }
+
+        $member->save();
+
+        return response()->json([
+            'member' => $member->load('user')->toPosArray(),
         ]);
     }
 
@@ -44,8 +106,7 @@ class MemberController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $gym = $this->gymData();
-        $packages = collect($gym['catalog'] ?? [])
+        $packages = $this->gymCatalog()
             ->where('cat', 'Membership')
             ->pluck('name')
             ->all();
@@ -98,6 +159,8 @@ class MemberController extends Controller
                 'expiry_date' => ($validated['membership_package'] ?? null) ? Carbon::today()->addMonth() : null,
                 'notes' => $validated['notes'] ?? null,
                 'terms_accepted_at' => now(),
+                // Staff-created members are trusted, so they are verified on creation.
+                'verified_at' => now(),
             ]);
         });
 
@@ -107,16 +170,81 @@ class MemberController extends Controller
     }
 
     /**
-     * Read the gym unit's prototype data (catalog/categories) from JSON.
-     *
-     * @return array<string, mixed>
+     * Staff (manager or cashier) verify a pending registrant. Optionally assign
+     * a membership package at the same time; when a package is given and the
+     * member has no expiry yet, default it to one month out (mirrors store()).
      */
-    private function gymData(): array
+    public function verify(Request $request, Member $member): JsonResponse
     {
-        $path = resource_path('data/gym.json');
+        $packages = $this->gymCatalog()
+            ->where('cat', 'Membership')
+            ->pluck('name')
+            ->all();
 
-        return File::exists($path)
-            ? (json_decode(File::get($path), true) ?: [])
-            : [];
+        $validated = $request->validate([
+            'membership_package' => ['nullable', 'string', $packages ? Rule::in($packages) : 'string'],
+        ]);
+
+        // Default to the package the member already requested when paying.
+        $package = $validated['membership_package'] ?? null;
+        if (! $package) {
+            $package = $member->requested_package ?: null;
+        }
+
+        if ($package) {
+            $member->membership_package = $package;
+
+            if ($member->expiry_date === null) {
+                $member->expiry_date = Carbon::today()->addMonth();
+            }
+        }
+
+        if ($member->verified_at === null) {
+            $member->verified_at = now();
+        }
+
+        $member->save();
+
+        return response()->json([
+            'member' => $member->load('user')->toPosArray(),
+        ]);
+    }
+
+    /**
+     * Staff (manager/cashier) soft-delete a member (moves them to the Trash).
+     */
+    public function destroy(Member $member): JsonResponse
+    {
+        $member->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Restore a soft-deleted member from the Trash (resolved incl. trashed).
+     */
+    public function restore(string $member): JsonResponse
+    {
+        $record = Member::withTrashed()->where('member_code', $member)->firstOrFail();
+        $record->restore();
+
+        return response()->json([
+            'member' => $record->load('user')->toPosArray(),
+        ]);
+    }
+
+    /**
+     * The gym catalog (packages, classes, PT) sourced from the database and
+     * mapped to the POS array shape used by the member portal.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function gymCatalog(): Collection
+    {
+        return Product::forUnit('gym')
+            ->with('category')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Product $p) => $p->toPosArray());
     }
 }

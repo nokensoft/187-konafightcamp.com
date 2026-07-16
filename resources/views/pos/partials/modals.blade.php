@@ -171,6 +171,31 @@
                         <p class="text-zinc-400 text-sm" x-text="memberView.member.id"></p>
                     </div>
                 </div>
+
+                <!-- Uploaded KTP / ID document (or placeholder) -->
+                <div class="mb-6">
+                    <div class="text-zinc-400 text-sm mb-2">ID / KTP</div>
+                    <template x-if="memberView.member.idPhotoUrl">
+                        <a :href="memberView.member.idPhotoUrl" target="_blank" rel="noopener" class="block">
+                            <template x-if="!(memberView.member.idPhotoUrl || '').toLowerCase().endsWith('.pdf')">
+                                <img :src="memberView.member.idPhotoUrl" alt="ID document" class="w-full max-h-48 rounded-2xl border border-zinc-200 object-contain bg-zinc-50">
+                            </template>
+                            <template x-if="(memberView.member.idPhotoUrl || '').toLowerCase().endsWith('.pdf')">
+                                <div class="flex items-center gap-3 rounded-2xl border border-zinc-200 px-5 py-4 hover:border-red-300 transition">
+                                    <i class="fa-solid fa-file-pdf text-2xl text-red-500"></i>
+                                    <span class="text-sm font-medium text-zinc-700">View uploaded document</span>
+                                </div>
+                            </template>
+                        </a>
+                    </template>
+                    <template x-if="!memberView.member.idPhotoUrl">
+                        <div class="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 px-6 py-8 text-center">
+                            <i class="fa-solid fa-id-card text-3xl text-zinc-300"></i>
+                            <p class="text-sm text-zinc-400">No ID uploaded</p>
+                        </div>
+                    </template>
+                </div>
+
                 <dl class="space-y-4 text-sm">
                     <div class="flex justify-between gap-4"><dt class="text-zinc-400">Gender</dt><dd class="font-medium text-right" x-text="memberView.member.gender || '\u2014'"></dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-zinc-400">Type</dt><dd class="font-medium text-right" x-text="memberView.member.type || '\u2014'"></dd></div>
@@ -178,6 +203,8 @@
                     <div class="flex justify-between gap-4"><dt class="text-zinc-400">ID Number</dt><dd class="font-medium text-right" x-text="memberView.member.idNumber || '\u2014'"></dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-zinc-400">Registered</dt><dd class="font-medium text-right" x-text="memberView.member.registrationDate || '\u2014'"></dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-zinc-400">Expires</dt><dd class="font-medium text-right" x-text="memberView.member.expiry || '\u2014'"></dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-zinc-400">Status</dt><dd class="font-medium text-right" x-text="memberView.member.verified === false ? (memberView.member.paymentSubmitted ? 'Awaiting verification' : 'Pending') : 'Verified'"></dd></div>
+                    <div x-show="memberView.member.paymentProofUrl" x-cloak class="flex justify-between gap-4"><dt class="text-zinc-400">Transfer proof</dt><dd class="text-right"><a :href="memberView.member.paymentProofUrl" target="_blank" rel="noopener" class="text-red-600 underline">View</a></dd></div>
                     <div>
                         <dt class="text-zinc-400 mb-1">Address</dt>
                         <dd class="font-medium" x-text="memberView.member.address || '\u2014'"></dd>
@@ -190,6 +217,132 @@
                 <div class="mt-8">
                     <button @click="memberView.open = false" class="w-full py-4 bg-zinc-900 text-white rounded-3xl hover:bg-zinc-800 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-xmark"></i> Close
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+
+<!-- Verify Member (manager/cashier: activate a pending registrant) -->
+<div x-show="verifyModal.open" x-cloak x-transition.opacity
+     @click.self="verifyModal.open = false" @keydown.escape.window="verifyModal.open = false"
+     class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div x-show="verifyModal.open" x-transition class="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <template x-if="verifyModal.member">
+            <div class="p-6 sm:p-8">
+                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+                <h3 class="font-semibold text-xl mb-1 text-center">Verify Member</h3>
+                <p class="text-zinc-500 text-sm mb-6 text-center">
+                    Activate <span class="font-medium text-zinc-700" x-text="verifyModal.member.name"></span>
+                    (<span x-text="verifyModal.member.id"></span>). You can optionally assign a package now.
+                </p>
+
+                <!-- Submitted transfer proof (if any) -->
+                <div x-show="verifyModal.member.paymentSubmitted" x-cloak class="mb-5 rounded-2xl bg-zinc-50 border border-zinc-100 px-5 py-4 text-sm text-left">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-zinc-400 text-xs">Transfer proof</div>
+                            <div class="font-medium truncate" x-text="verifyModal.member.requestedPackage || 'Package not specified'"></div>
+                            <div class="text-xs text-zinc-400" x-text="'Submitted ' + (verifyModal.member.paymentSubmittedDate || '')"></div>
+                        </div>
+                        <a :href="verifyModal.member.paymentProofUrl" x-show="verifyModal.member.paymentProofUrl" target="_blank" rel="noopener" class="text-red-600 text-sm underline shrink-0">View proof</a>
+                    </div>
+                </div>
+
+                <!-- Validation errors -->
+                <div x-show="verifyModal.errors.length" x-cloak class="mb-5 bg-red-50 border border-red-100 text-red-700 rounded-2xl px-5 py-4 text-sm">
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(msg, i) in verifyModal.errors" :key="i">
+                            <li x-text="msg"></li>
+                        </template>
+                    </ul>
+                </div>
+
+                <label class="block text-sm font-medium text-zinc-600 mb-2">Membership Package (optional)</label>
+                <select x-model="verifyModal.package" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                    <option value="">— Assign later —</option>
+                    <template x-for="p in membershipPackages" :key="p">
+                        <option x-text="p"></option>
+                    </template>
+                </select>
+
+                <div class="mt-8 flex gap-4">
+                    <button @click="verifyModal.open = false" :disabled="verifyModal.saving" class="flex-1 py-4 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2 disabled:opacity-50">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </button>
+                    <button @click="verifyMember()" :disabled="verifyModal.saving" class="flex-1 py-4 bg-emerald-600 text-white rounded-3xl hover:bg-emerald-700 flex items-center justify-center gap-2 disabled:opacity-50">
+                        <i class="fa-solid" :class="verifyModal.saving ? 'fa-circle-notch fa-spin' : 'fa-user-check'"></i>
+                        <span x-text="verifyModal.saving ? 'Verifying…' : 'Verify Member'"></span>
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+
+<!-- Record Payment (staff: attach a bank-transfer proof / set package for a member) -->
+@php $bank = config('contact.bank'); @endphp
+<div x-show="paymentModal.open" x-cloak x-transition.opacity
+     @click.self="paymentModal.open = false" @keydown.escape.window="paymentModal.open = false"
+     class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div x-show="paymentModal.open" x-transition class="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <template x-if="paymentModal.member">
+            <div class="p-6 sm:p-8">
+                <h3 class="text-xl font-semibold mb-1">Record Payment</h3>
+                <p class="text-sm text-zinc-400 mb-6">
+                    Attach a bank-transfer proof for
+                    <span class="font-medium text-zinc-600" x-text="paymentModal.member.name"></span>
+                    (<span x-text="paymentModal.member.id"></span>).
+                </p>
+
+                <div x-show="paymentModal.errors.length" x-cloak class="mb-5 bg-red-50 border border-red-100 text-red-700 rounded-2xl px-5 py-4 text-sm">
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(msg, i) in paymentModal.errors" :key="i"><li x-text="msg"></li></template>
+                    </ul>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Membership Package</label>
+                        <select x-model="paymentModal.package" class="w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                            <option value="">— Not specified —</option>
+                            <template x-for="p in membershipPackages" :key="p"><option x-text="p"></option></template>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-600 mb-2">Proof of transfer</label>
+                        <input type="file" accept="image/*,application/pdf"
+                               @change="paymentModal.proof = $event.target.files[0]; paymentModal.proofName = ($event.target.files[0] && $event.target.files[0].name) || ''"
+                               class="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-2xl file:border-0 file:bg-red-50 file:text-red-600 hover:file:bg-red-100">
+                        <p x-show="paymentModal.proofName" x-cloak class="text-xs text-zinc-500 mt-2" x-text="paymentModal.proofName"></p>
+                        <p x-show="paymentModal.member.paymentProofUrl && !paymentModal.proofName" x-cloak class="text-xs text-zinc-500 mt-2">
+                            Current proof: <a :href="paymentModal.member.paymentProofUrl" target="_blank" rel="noopener" class="text-red-600 underline">view</a>
+                        </p>
+                    </div>
+
+                    <!-- Bank Mandiri details (simulated) -->
+                    <div class="bg-zinc-50 rounded-3xl p-5 text-sm">
+                        <div class="text-xs uppercase tracking-widest text-zinc-400 mb-3">Bank Transfer (simulated)</div>
+                        <div class="grid grid-cols-2 gap-y-2">
+                            <span class="text-zinc-500">Bank</span><span class="font-medium text-right">{{ $bank['name'] }}</span>
+                            <span class="text-zinc-500">Account No.</span><span class="font-medium text-right">{{ $bank['account_number'] }}</span>
+                            <span class="text-zinc-500">Account Name</span><span class="font-medium text-right">{{ $bank['account_holder'] }}</span>
+                            <span class="text-zinc-500">Branch</span><span class="font-medium text-right">{{ $bank['branch'] }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-4">
+                    <button @click="paymentModal.open = false" :disabled="paymentModal.saving" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2 disabled:opacity-50">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </button>
+                    <button @click="savePayment()" :disabled="paymentModal.saving" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2 disabled:opacity-50">
+                        <i class="fa-solid" :class="paymentModal.saving ? 'fa-circle-notch fa-spin' : 'fa-floppy-disk'"></i>
+                        <span x-text="paymentModal.saving ? 'Saving…' : 'Save Payment'"></span>
                     </button>
                 </div>
             </div>
@@ -213,13 +366,28 @@
                     </template>
                 </select>
                 <input x-model.number="itemModal.stock" type="number" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Stock">
+                <div class="grid grid-cols-2 gap-4">
+                    <select x-model="itemModal.discountType" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300">
+                        <option value="">No discount</option>
+                        <option value="percent">Discount (%)</option>
+                        <option value="amount">Discount (Rp)</option>
+                    </select>
+                    <input x-model.number="itemModal.discountValue" type="number" min="0" :disabled="!itemModal.discountType"
+                           class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300 disabled:bg-zinc-100 disabled:text-zinc-400"
+                           :placeholder="itemModal.discountType === 'percent' ? 'e.g. 20' : 'e.g. 50000'">
+                </div>
+                <div x-show="itemModal.discountType" x-cloak class="text-sm text-zinc-500 px-2">
+                    Final price:
+                    <span class="font-semibold text-red-600" x-text="formatRp(itemModalFinalPrice)"></span>
+                    <span x-show="itemModalFinalPrice !== (Number(itemModal.price) || 0)" class="text-xs text-zinc-400 line-through ml-1" x-text="formatRp(Number(itemModal.price) || 0)"></span>
+                </div>
             </div>
             <div class="mt-8 flex gap-4">
-                <button @click="itemModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2">
+                <button @click="itemModal.open = false" :disabled="itemModal.saving" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2 disabled:opacity-50">
                     <i class="fa-solid fa-xmark"></i> Cancel
                 </button>
-                <button @click="saveItem()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> <span x-text="itemModal.editingId ? 'Save Changes' : 'Add to Catalog'"></span>
+                <button @click="saveItem()" :disabled="itemModal.saving" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2 disabled:opacity-50">
+                    <i class="fa-solid" :class="itemModal.saving ? 'fa-circle-notch fa-spin' : 'fa-floppy-disk'"></i> <span x-text="itemModal.editingId ? 'Save Changes' : 'Add to Catalog'"></span>
                 </button>
             </div>
         </div>
@@ -235,19 +403,43 @@
             <h3 class="font-semibold text-xl mb-6" x-text="categoryModal.editingName ? 'Edit Category' : 'New Category'"></h3>
             <input x-model="categoryModal.name" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300" placeholder="Category name">
             <input x-model="categoryModal.description" @keydown.enter="saveCategory()" class="block w-full border rounded-3xl px-6 py-4 outline-none focus:border-red-300 mt-4" placeholder="Category description">
+
+            <!-- Item count + delete (edit mode only). Delete is enabled only when the category is empty. -->
+            <template x-if="categoryModal.editingName">
+                <div class="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 px-6 py-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="text-sm">
+                            <div class="text-zinc-400">Items in this category</div>
+                            <div class="font-semibold text-zinc-800">
+                                <span x-text="editingCategoryItemCount"></span>
+                                <span x-text="editingCategoryItemCount === 1 ? 'item' : 'items'"></span>
+                            </div>
+                        </div>
+                        <button type="button" @click="deleteCategory()" :disabled="editingCategoryItemCount > 0"
+                                :title="editingCategoryItemCount > 0 ? 'Move or delete its items before deleting this category' : 'Delete this category'"
+                                class="px-5 py-3 rounded-3xl border border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+                            <i class="fa-solid fa-trash-can"></i> Delete
+                        </button>
+                    </div>
+                    <p x-show="editingCategoryItemCount > 0" class="text-xs text-zinc-400 mt-2">
+                        Remove or reassign its <span x-text="editingCategoryItemCount"></span> item(s) before this category can be deleted.
+                    </p>
+                </div>
+            </template>
+
             <div class="mt-8 flex gap-4">
-                <button @click="categoryModal.open = false" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2">
+                <button @click="categoryModal.open = false" :disabled="categoryModal.saving" class="flex-1 py-5 border rounded-3xl hover:bg-zinc-50 flex items-center justify-center gap-2 disabled:opacity-50">
                     <i class="fa-solid fa-xmark"></i> Cancel
                 </button>
-                <button @click="saveCategory()" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> <span x-text="categoryModal.editingName ? 'Save Changes' : 'Add Category'"></span>
+                <button @click="saveCategory()" :disabled="categoryModal.saving" class="flex-1 py-5 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2 disabled:opacity-50">
+                    <i class="fa-solid" :class="categoryModal.saving ? 'fa-circle-notch fa-spin' : 'fa-floppy-disk'"></i> <span x-text="categoryModal.editingName ? 'Save Changes' : 'Add Category'"></span>
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Delete confirmation (soft-delete to Trash) -->
+<!-- Confirmation / alert modal (move to trash, permanent delete, empty trash) -->
 <div x-show="confirmModal.open" x-cloak x-transition.opacity
      @click.self="confirmModal.open = false" @keydown.escape.window="confirmModal.open = false"
      class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -263,7 +455,7 @@
                     <i class="fa-solid fa-xmark"></i> Cancel
                 </button>
                 <button @click="confirmDelete()" class="flex-1 py-4 bg-red-600 text-white rounded-3xl hover:bg-red-700 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-trash-can"></i> Move to Trash
+                    <i class="fa-solid" :class="confirmModal.confirmIcon"></i> <span x-text="confirmModal.confirmLabel"></span>
                 </button>
             </div>
         </div>

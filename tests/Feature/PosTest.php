@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -26,12 +28,21 @@ class PosTest extends TestCase
     {
         $manager = User::factory()->manager()->create();
 
+        $category = Category::create(['unit' => 'gym', 'name' => 'Membership']);
+        Product::create([
+            'unit' => 'gym',
+            'category_id' => $category->id,
+            'name' => 'Monthly Premium',
+            'price' => 450000,
+            'stock' => 999,
+        ]);
+
         $response = $this->actingAs($manager)->get('/pos');
 
         $response->assertOk();
         $response->assertSee('Kona Fight Camp');
         $response->assertSee('Recent Activity');
-        $response->assertSee('Monthly Premium'); // catalog data injected from JSON
+        $response->assertSee('Monthly Premium'); // catalog data injected from the DB
         $response->assertSee('Trash');            // manager recycle-bin partial present
     }
 

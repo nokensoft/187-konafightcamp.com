@@ -18,6 +18,9 @@ export default (initial = {}, role = 'cashier') => ({
     searchQuery: '',
     logSearch: '',
     activeCategory: null,
+    inventoryQuery: '',          // dedicated search box above the inventory table
+    stockFilter: 'all',          // all | in | low | out
+    lowStockThreshold: 5,        // stock <= this (and > 0) counts as "low"
     sidebarOpen: false,
     sidebarCollapsed: false,
     loading: true,
@@ -92,9 +95,11 @@ export default (initial = {}, role = 'cashier') => ({
     // ---- modal state ----
     memberModal:   { open: false, saving: false, errors: [], name: '', email: '', password: '', password_confirmation: '', phone: '', dateOfBirth: '', gender: 'Male', type: 'Local', package: '', idNumber: '', idPhoto: null, idPhotoPreview: '', idPhotoDragging: false, address: '', emergencyContactName: '', emergencyContactPhone: '', notes: '' },
     memberView:    { open: false, member: null },
-    itemModal:     { open: false, editingId: null, name: '', price: '', cat: '', stock: '' },
-    categoryModal: { open: false, editingName: null, name: '', description: '' },
-    confirmModal:  { open: false, title: '', message: '', kind: null, ref: null },
+    verifyModal:   { open: false, saving: false, member: null, package: '', errors: [] },
+    paymentModal:  { open: false, saving: false, member: null, package: '', proof: null, proofName: '', errors: [] },
+    itemModal:     { open: false, saving: false, editingId: null, name: '', price: '', cat: '', stock: '', discountType: '', discountValue: '' },
+    categoryModal: { open: false, saving: false, editingId: null, editingName: null, name: '', description: '' },
+    confirmModal:  { open: false, title: '', message: '', kind: null, ref: null, confirmLabel: 'Move to Trash', confirmIcon: 'fa-trash-can' },
     checkoutModal: { open: false },
     receipt: { ref: '', unit: '', date: '', time: '', items: [], subtotal: 0, tax: 0, total: 0 },
     receiptQrUrl: '',
@@ -107,6 +112,8 @@ export default (initial = {}, role = 'cashier') => ({
         this.loading = false;
         this.$watch('activeUnit', () => {
             this.activeCategory = null;
+            this.inventoryQuery = '';
+            this.stockFilter = 'all';
             if (!this.unitNav.some(n => n.tab === this.activeTab) && !this.globalTabs.includes(this.activeTab)) this.activeTab = 'dashboard';
         });
     },
@@ -118,8 +125,8 @@ export default (initial = {}, role = 'cashier') => ({
             if (unit && Array.isArray(unit.categories)) {
                 unit.categories = unit.categories.map(c =>
                     typeof c === 'string'
-                        ? { name: c, description: '' }
-                        : { name: c.name, description: c.description || '' }
+                        ? { id: null, name: c, description: '' }
+                        : { id: c.id ?? null, name: c.name, description: c.description || '' }
                 );
             }
         });
@@ -131,7 +138,8 @@ export default (initial = {}, role = 'cashier') => ({
     // ---- computed: navigation ----
     get unitNav() {
         const nav = [...(this.navConfig[this.activeUnit] || [])];
-        if (this.isManager) nav.push({ tab: 'trash', label: 'Trash', icon: 'fa-trash-can' });
+        // Trash (restore/purge) is part of catalog CRUD, available to all POS staff.
+        nav.push({ tab: 'trash', label: 'Trash', icon: 'fa-trash-can' });
         return nav;
     },
 
@@ -167,10 +175,34 @@ export default (initial = {}, role = 'cashier') => ({
         return (text || '').toLowerCase().includes(q);
     },
     get posItems() { return this.catalog.filter(i => this.matches(i.name + ' ' + i.cat)); },
+    // classify an item by stock: 'out' (0), 'low' (<= threshold) or 'in'
+    stockStatus(item) {
+        const s = Number(item.stock) || 0;
+        if (s <= 0) return 'out';
+        if (s <= this.lowStockThreshold) return 'low';
+        return 'in';
+    },
+    stockLabel(item) { return { in: 'In stock', low: 'Low', out: 'Out' }[this.stockStatus(item)]; },
+    // table-scoped search (independent of the global header quick-search)
+    matchesInventory(text) {
+        const q = this.inventoryQuery.toLowerCase().trim();
+        if (!q) return true;
+        return (text || '').toLowerCase().includes(q);
+    },
     get inventoryItems() {
         return this.catalog
             .filter(i => !this.activeCategory || i.cat === this.activeCategory)
-            .filter(i => this.matches(i.name + ' ' + i.cat));
+            .filter(i => this.stockFilter === 'all' || this.stockStatus(i) === this.stockFilter)
+            .filter(i => this.matches(i.name + ' ' + i.cat))
+            .filter(i => this.matchesInventory(i.name + ' ' + i.cat));
+    },
+    get hasInventoryFilters() {
+        return !!this.inventoryQuery.trim() || !!this.activeCategory || this.stockFilter !== 'all';
+    },
+    clearInventoryFilters() {
+        this.inventoryQuery = '';
+        this.activeCategory = null;
+        this.stockFilter = 'all';
     },
     get filteredMembers() {
         return this.members.filter(m => this.matches(`${m.id} ${m.name} ${m.package} ${m.type}`));
@@ -195,7 +227,7 @@ export default (initial = {}, role = 'cashier') => ({
     addToCart(item) {
         const existing = this.cart.find(i => i.id === item.id);
         if (existing) existing.qty++;
-        else this.cart.push({ id: item.id, name: item.name, price: item.price, cat: item.cat, qty: 1 });
+        else this.cart.push({ id: item.id, name: item.name, price: this.effPrice(item), cat: item.cat, qty: 1 });
         this.showToast(item.name + ' added to cart');
     },
     cartQty(idx, delta) {
@@ -334,6 +366,78 @@ export default (initial = {}, role = 'cashier') => ({
     },
     viewMember(m) { this.memberView = { open: true, member: m }; },
 
+    // Open the verify dialog for a pending registrant. Pre-fills the package
+    // the member requested when they submitted payment.
+    openVerifyModal(m) {
+        this.verifyModal = { open: true, saving: false, member: m, package: m.requestedPackage || '', errors: [] };
+    },
+
+    // Open the staff "record payment" dialog for a member.
+    openPaymentModal(m) {
+        this.paymentModal = { open: true, saving: false, member: m, package: m.requestedPackage || '', proof: null, proofName: '', errors: [] };
+    },
+
+    // Persist a bank-transfer proof / intended package for a member, then
+    // reflect the returned record in place.
+    async savePayment() {
+        if (!this.paymentModal.member || this.paymentModal.saving) return;
+        this.paymentModal.saving = true;
+        this.paymentModal.errors = [];
+
+        const code = this.paymentModal.member.id;
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        const fd = new FormData();
+        if (this.paymentModal.package) fd.append('requested_package', this.paymentModal.package);
+        if (this.paymentModal.proof) fd.append('payment_proof', this.paymentModal.proof);
+
+        try {
+            const res = await fetch(`/members/${encodeURIComponent(code)}/payment`, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token || '' },
+                body: fd,
+            });
+            if (res.status === 422) {
+                const data = await res.json();
+                this.paymentModal.errors = Object.values(data.errors || {}).flat();
+                return;
+            }
+            if (!res.ok) {
+                this.paymentModal.errors = ['Something went wrong. Please try again.'];
+                return;
+            }
+            const data = await res.json();
+            if (data.member) Object.assign(this.paymentModal.member, data.member);
+            this.paymentModal.open = false;
+            this.showToast((data.member?.name || 'Member') + ' payment recorded');
+        } catch (e) {
+            console.error('Save payment failed:', e);
+            this.paymentModal.errors = ['Network error. Please try again.'];
+        } finally {
+            this.paymentModal.saving = false;
+        }
+    },
+
+    // Persist verification on the server (optionally assigning a package), then
+    // reflect the returned record (verified flag, package, expiry) in place.
+    async verifyMember() {
+        if (!this.verifyModal.member || this.verifyModal.saving) return;
+        this.verifyModal.saving = true;
+        this.verifyModal.errors = [];
+        const code = this.verifyModal.member.id;
+        const payload = {};
+        if (this.verifyModal.package) payload.membership_package = this.verifyModal.package;
+        try {
+            const data = await this._request(`/members/${encodeURIComponent(code)}/verify`, 'PATCH', payload);
+            if (data.member) Object.assign(this.verifyModal.member, data.member);
+            this.verifyModal.open = false;
+            this.showToast((data.member?.name || 'Member') + ' verified');
+        } catch (e) {
+            this.verifyModal.errors = [e.message || 'Failed to verify member.'];
+        } finally {
+            this.verifyModal.saving = false;
+        }
+    },
+
     // Persist the member on the server (creates a login account + gym profile),
     // then insert the returned record into the in-memory list.
     async saveMember() {
@@ -397,40 +501,49 @@ export default (initial = {}, role = 'cashier') => ({
             message: `Move ${m.name} (${m.id}) to Trash?`,
             kind: 'member',
             ref: m.id,
+            confirmLabel: 'Move to Trash',
+            confirmIcon: 'fa-trash-can',
         };
     },
 
     // ---- item actions ----
     openItemModal(item = null) {
         if (item) {
-            this.itemModal = { open: true, editingId: item.id, name: item.name, price: item.price, cat: item.cat, stock: item.stock };
+            this.itemModal = { open: true, saving: false, editingId: item.id, name: item.name, price: item.price, cat: item.cat, stock: item.stock, discountType: item.discountType || '', discountValue: item.discountValue || '' };
         } else {
-            this.itemModal = { open: true, editingId: null, name: '', price: '', cat: (this.unitCategories[0] && this.unitCategories[0].name) || 'General', stock: '' };
+            this.itemModal = { open: true, saving: false, editingId: null, name: '', price: '', cat: (this.unitCategories[0] && this.unitCategories[0].name) || '', stock: '', discountType: '', discountValue: '' };
         }
     },
-    saveItem() {
+    // Persist a catalog item on the server, then reflect it in memory.
+    async saveItem() {
         const name = (this.itemModal.name || '').trim();
-        if (!name) return;
-        const list = this.catalog;
-        if (this.itemModal.editingId) {
-            const it = list.find(i => i.id === this.itemModal.editingId);
-            if (it) {
-                it.name = name;
-                it.price = Number(this.itemModal.price) || 0;
-                it.cat = this.itemModal.cat || 'General';
-                it.stock = Number(this.itemModal.stock) || 0;
+        if (!name || this.itemModal.saving) return;
+        this.itemModal.saving = true;
+        const payload = {
+            name,
+            cat: this.itemModal.cat || '',
+            price: Number(this.itemModal.price) || 0,
+            stock: Number(this.itemModal.stock) || 0,
+            discount_type: this.itemModal.discountType || null,
+            discount_value: Number(this.itemModal.discountValue) || 0,
+        };
+        try {
+            if (this.itemModal.editingId) {
+                const data = await this._request(`/products/${this.itemModal.editingId}`, 'PATCH', payload);
+                const it = this.catalog.find(i => i.id === this.itemModal.editingId);
+                if (it && data.item) Object.assign(it, data.item);
+                this.showToast(`${name} updated`);
+            } else {
+                const data = await this._request(`/units/${this.activeUnit}/products`, 'POST', payload);
+                if (data.item) this.catalog.unshift(data.item);
+                this.showToast(`${name} added`);
             }
-        } else {
-            list.unshift({
-                id: Date.now(),
-                name: name,
-                cat: this.itemModal.cat || 'General',
-                price: Number(this.itemModal.price) || 0,
-                stock: Number(this.itemModal.stock) || 0,
-                emoji: '🆕',
-            });
+            this.itemModal.open = false;
+        } catch (e) {
+            this.showToast(e.message || 'Failed to save item');
+        } finally {
+            this.itemModal.saving = false;
         }
-        this.itemModal.open = false;
     },
     askDeleteItem(item) {
         this.confirmModal = {
@@ -439,19 +552,34 @@ export default (initial = {}, role = 'cashier') => ({
             message: `Move "${item.name}" to Trash?`,
             kind: 'item',
             ref: item.id,
+            confirmLabel: 'Move to Trash',
+            confirmIcon: 'fa-trash-can',
         };
     },
 
-    // ---- unified delete confirmation (soft-delete to Trash) ----
-    confirmDelete() {
-        if (this.confirmModal.kind === 'member') this._trashMember(this.confirmModal.ref);
-        else if (this.confirmModal.kind === 'item') this._trashItem(this.confirmModal.ref);
+    // ---- unified confirmation / alert modal ----
+    async confirmDelete() {
+        const { kind, ref } = this.confirmModal;
         this.confirmModal.open = false;
+        if (kind === 'member') await this._trashMember(ref);
+        else if (kind === 'item') await this._trashItem(ref);
+        else if (kind === 'purge') await this.purgeFromTrash(ref);
+        else if (kind === 'empty') await this.emptyTrash();
     },
-    _trashMember(id) {
+    async _trashMember(id) {
         if (!this.units.gym) return;
         const m = (this.units.gym.members || []).find(x => x.id === id);
         if (!m) return;
+        // DB-backed members (numeric memberId) are soft-deleted server-side;
+        // JSON prototype members have no row, so they stay client-side only.
+        if (m.memberId) {
+            try {
+                await this._request(`/members/${encodeURIComponent(m.id)}`, 'DELETE');
+            } catch (e) {
+                this.showToast(e.message || 'Failed to delete member');
+                return;
+            }
+        }
         this.units.gym.members = this.units.gym.members.filter(x => x.id !== id);
         this.trash.unshift({
             trashId: this._trashId(),
@@ -463,12 +591,18 @@ export default (initial = {}, role = 'cashier') => ({
             deletedAt: this._stamp(),
         });
     },
-    _trashItem(id) {
+    async _trashItem(id) {
         const unitKey = this.activeUnit;
         const unit = this.units[unitKey];
         if (!unit) return;
         const it = (unit.catalog || []).find(x => x.id === id);
         if (!it) return;
+        try {
+            await this._request(`/products/${id}`, 'DELETE');
+        } catch (e) {
+            this.showToast(e.message || 'Failed to delete item');
+            return;
+        }
         unit.catalog = unit.catalog.filter(x => x.id !== id);
         this.trash.unshift({
             trashId: this._trashId(),
@@ -479,28 +613,94 @@ export default (initial = {}, role = 'cashier') => ({
             data: it,
             deletedAt: this._stamp(),
         });
+        this.showToast(`${it.name} moved to Trash`);
     },
 
     // ---- trash (recycle bin) actions ----
     get trashCount() { return this.trash.length; },
-    restoreFromTrash(entry) {
+    async restoreFromTrash(entry) {
         if (entry.type === 'member') {
             if (!this.units.gym) return;
             if (!this.units.gym.members) this.units.gym.members = [];
-            this.units.gym.members.unshift(entry.data);
+            let restored = entry.data;
+            // DB-backed members are restored server-side (soft-delete); JSON
+            // prototype members are re-added client-side only.
+            if (entry.data.memberId) {
+                try {
+                    const data = await this._request(`/members/${encodeURIComponent(entry.data.id)}/restore`, 'POST');
+                    restored = data.member || entry.data;
+                } catch (e) {
+                    this.showToast(e.message || 'Failed to restore member');
+                    return;
+                }
+            }
+            this.units.gym.members.unshift(restored);
         } else if (entry.type === 'item') {
             const unit = this.units[entry.unit];
             if (!unit) return;
-            if (!unit.catalog) unit.catalog = [];
-            unit.catalog.unshift(entry.data);
+            try {
+                const data = await this._request(`/products/${entry.data.id}/restore`, 'POST');
+                if (!unit.catalog) unit.catalog = [];
+                unit.catalog.unshift(data.item || entry.data);
+            } catch (e) {
+                this.showToast(e.message || 'Failed to restore item');
+                return;
+            }
         }
         this.trash = this.trash.filter(t => t.trashId !== entry.trashId);
         this.showToast(entry.name + ' restored');
     },
-    purgeFromTrash(entry) {
-        this.trash = this.trash.filter(t => t.trashId !== entry.trashId);
+    // open the alert modal before permanently deleting a single entry
+    askPurge(entry) {
+        this.confirmModal = {
+            open: true,
+            title: 'Delete Permanently',
+            message: `Permanently delete "${entry.name}"? This action cannot be undone.`,
+            kind: 'purge',
+            ref: entry,
+            confirmLabel: 'Delete Permanently',
+            confirmIcon: 'fa-trash-can',
+        };
     },
-    emptyTrash() { this.trash = []; },
+    // open the alert modal before emptying the whole Trash
+    askEmptyTrash() {
+        if (this.trashCount === 0) return;
+        this.confirmModal = {
+            open: true,
+            title: 'Empty Trash',
+            message: `Permanently delete all ${this.trashCount} item(s) in Trash? This action cannot be undone.`,
+            kind: 'empty',
+            ref: null,
+            confirmLabel: 'Empty Trash',
+            confirmIcon: 'fa-trash-can',
+        };
+    },
+    async purgeFromTrash(entry) {
+        if (entry.type === 'item') {
+            try {
+                await this._request(`/products/${entry.data.id}/force`, 'DELETE');
+            } catch (e) {
+                this.showToast(e.message || 'Failed to delete item');
+                return;
+            }
+        }
+        this.trash = this.trash.filter(t => t.trashId !== entry.trashId);
+        this.showToast(`${entry.name} permanently deleted`);
+    },
+    async emptyTrash() {
+        for (const entry of [...this.trash]) {
+            if (entry.type === 'item') {
+                try {
+                    await this._request(`/products/${entry.data.id}/force`, 'DELETE');
+                } catch (e) {
+                    this.showToast(e.message || 'Failed to empty Trash');
+                    return;
+                }
+            }
+        }
+        this.trash = [];
+        this.showToast('Trash emptied');
+    },
 
     // ---- notifications (simulation) ----
     get unreadCount() { return this.notifications.filter(n => !n.read).length; },
@@ -517,34 +717,102 @@ export default (initial = {}, role = 'cashier') => ({
     // ---- category actions ----
     openCategoryModal(cat = null) {
         if (cat) {
-            this.categoryModal = { open: true, editingName: cat.name, name: cat.name, description: cat.description || '' };
+            this.categoryModal = { open: true, saving: false, editingId: cat.id ?? null, editingName: cat.name, name: cat.name, description: cat.description || '' };
         } else {
-            this.categoryModal = { open: true, editingName: null, name: '', description: '' };
+            this.categoryModal = { open: true, saving: false, editingId: null, editingName: null, name: '', description: '' };
         }
     },
-    saveCategory() {
+    // Persist a category on the server. Uniqueness is enforced server-side; the
+    // 422 message is surfaced through the toast.
+    async saveCategory() {
         const name = (this.categoryModal.name || '').trim();
-        if (!name) return;
+        if (!name) { this.showToast('Category name is required'); return; }
+        if (this.categoryModal.saving) return;
+        this.categoryModal.saving = true;
         const description = (this.categoryModal.description || '').trim();
         if (!this.currentUnit.categories) this.currentUnit.categories = [];
         const cats = this.currentUnit.categories;
-        if (this.categoryModal.editingName) {
-            const existing = cats.find(c => c.name === this.categoryModal.editingName);
-            if (existing) {
+        try {
+            if (this.categoryModal.editingId) {
+                const existing = cats.find(c => c.id === this.categoryModal.editingId);
+                if (!existing) { this.categoryModal.open = false; return; }
                 const oldName = existing.name;
-                existing.name = name;
-                existing.description = description;
-                if (oldName !== name) {
-                    this.catalog.forEach(i => { if (i.cat === oldName) i.cat = name; });
-                    if (this.activeCategory === oldName) this.activeCategory = name;
+                const data = await this._request(`/categories/${this.categoryModal.editingId}`, 'PATCH', { name, description });
+                const cat = data.category || { id: existing.id, name, description };
+                existing.name = cat.name;
+                existing.description = cat.description || '';
+                if (oldName !== cat.name) {
+                    this.catalog.forEach(i => { if (i.cat === oldName) i.cat = cat.name; });
+                    if (this.activeCategory === oldName) this.activeCategory = cat.name;
                 }
+                this.showToast(`Category "${cat.name}" updated`);
+            } else {
+                const data = await this._request(`/units/${this.activeUnit}/categories`, 'POST', { name, description });
+                if (data.category) cats.push({ id: data.category.id, name: data.category.name, description: data.category.description || '' });
+                this.showToast(`Category "${name}" added`);
             }
-        } else if (!cats.some(c => c.name === name)) {
-            cats.push({ name, description });
+            this.categoryModal.open = false;
+        } catch (e) {
+            this.showToast(e.message || 'Failed to save category');
+        } finally {
+            this.categoryModal.saving = false;
         }
-        this.categoryModal.open = false;
     },
     selectCategory(cat) { this.activeCategory = (this.activeCategory === cat ? null : cat); },
+
+    // number of catalog items assigned to a category within the active unit
+    categoryItemCount(name) {
+        if (!name) return 0;
+        return this.catalog.filter(i => i.cat === name).length;
+    },
+    // item count for the category currently open in the edit modal
+    get editingCategoryItemCount() {
+        return this.categoryItemCount(this.categoryModal.editingName);
+    },
+    // delete a category — only allowed when it holds no items (guarded here + in UI)
+    async deleteCategory() {
+        const id = this.categoryModal.editingId;
+        const name = this.categoryModal.editingName;
+        if (!id) return;
+        if (this.categoryItemCount(name) > 0) return;
+        try {
+            await this._request(`/categories/${id}`, 'DELETE');
+        } catch (e) {
+            this.showToast(e.message || 'Failed to delete category');
+            return;
+        }
+        if (this.currentUnit.categories) {
+            this.currentUnit.categories = this.currentUnit.categories.filter(c => c.id !== id);
+        }
+        if (this.activeCategory === name) this.activeCategory = null;
+        this.categoryModal.open = false;
+        this.showToast(`Category "${name}" deleted`);
+    },
+
+    // ---- server IO ----
+    // Shared fetch wrapper: attaches CSRF + JSON headers and normalizes errors
+    // to a thrown Error carrying the first validation message.
+    async _request(url, method, body = null) {
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        const res = await fetch(url, {
+            method,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token || '',
+            },
+            body: body ? JSON.stringify(body) : null,
+        });
+        let data = null;
+        try { data = await res.json(); } catch (e) { data = null; }
+        if (!res.ok) {
+            const msg = (data && data.errors)
+                ? Object.values(data.errors).flat()[0]
+                : (data && data.message) || 'Something went wrong. Please try again.';
+            throw new Error(msg);
+        }
+        return data || {};
+    },
 
     // ---- helpers ----
     _trashId() { return Date.now() + '-' + Math.random().toString(36).slice(2, 8); },
@@ -557,6 +825,26 @@ export default (initial = {}, role = 'cashier') => ({
         const d = value ? new Date(value) : new Date();
         if (isNaN(d.getTime())) return value || '';
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    },
+    // effective (discounted) unit price for a catalog item
+    effPrice(item) {
+        if (!item) return 0;
+        return item.hasDiscount ? item.finalPrice : item.price;
+    },
+    // short discount badge, e.g. "-20%" or "-Rp 5.000"
+    discountBadge(item) {
+        if (!item || !item.hasDiscount) return '';
+        return item.discountType === 'percent'
+            ? `-${item.discountValue}%`
+            : '-' + this.formatRp(item.discountValue);
+    },
+    // live final-price preview for the item modal form
+    get itemModalFinalPrice() {
+        const price = Number(this.itemModal.price) || 0;
+        const value = Number(this.itemModal.discountValue) || 0;
+        if (this.itemModal.discountType === 'percent') return Math.max(0, Math.round(price * (100 - Math.min(100, value)) / 100));
+        if (this.itemModal.discountType === 'amount') return Math.max(0, price - value);
+        return price;
     },
     formatRp(n) { return 'Rp ' + (Number(n) || 0).toLocaleString('id-ID'); },
 });
