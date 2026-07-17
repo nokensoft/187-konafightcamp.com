@@ -19,6 +19,13 @@ Route::get('/', function () use ($roleHome) {
     return auth()->check() ? $roleHome() : view('public.home');
 })->name('home');
 
+// Static public pages: each home section split into its own visitor page.
+Route::view('/prices', 'public.prices')->name('public.prices');
+Route::view('/about', 'public.about')->name('public.about');
+Route::view('/coaches', 'public.coaches')->name('public.coaches');
+Route::view('/gallery', 'public.gallery')->name('public.gallery');
+Route::view('/contact', 'public.contact')->name('public.contact');
+
 Route::middleware('auth')->group(function () use ($roleHome) {
     // Breeze redirects here after login/registration; branch by role.
     Route::get('/dashboard', $roleHome)->name('dashboard');
