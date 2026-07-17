@@ -13,7 +13,7 @@
 
   
   <!-- ===== PRICES ===== -->
-  <section id="prices" class="py-20 bg-[#0a0a0a]">
+  <section id="prices" class="py-20 bg-brand-dark">
     <div class="max-w-7xl mx-auto px-4">
       <div class="section-heading mb-12 fade-up">
         <p class="text-brand-red text-xs font-bold tracking-widest mb-2">MEMBERSHIP</p>
@@ -75,7 +75,7 @@
               <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-infinity"></i> MEMBERSHIPS</div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-gray-400">
-                  <thead class="text-xs uppercase bg-[#1a1a1a] text-white font-bold tracking-wider">
+                  <thead class="thead-table text-xs uppercase text-white font-bold tracking-wider">
                     <tr>
                       <th scope="col" class="px-4 py-3">Membership</th>
                       <th scope="col" class="px-4 py-3 text-center">Weekly</th>
@@ -150,7 +150,7 @@
               <div class="text-brand-red text-xs font-bold tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-infinity"></i> KEANGGOTAAN</div>
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-gray-400">
-                  <thead class="text-xs uppercase bg-[#1a1a1a] text-white font-bold tracking-wider">
+                  <thead class="thead-table text-xs uppercase text-white font-bold tracking-wider">
                     <tr>
                       <th scope="col" class="px-4 py-3">Membership</th>
                       <th scope="col" class="px-4 py-3 text-center">Weekly</th>

@@ -50,43 +50,44 @@
       <div class="fade-up"><div class="text-3xl font-extrabold">ALL</div><div class="text-xs font-semibold tracking-widest opacity-80 mt-1">LEVELS WELCOME</div></div>
     </div>
   </div>
-
+  
   <!-- ===== EXPLORE / SECTION LINKS ===== -->
-  <section class="py-20 bg-brand-dark">
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="section-heading mb-12 fade-up text-center">
-        <p class="text-brand-red text-xs font-bold tracking-widest mb-2">EXPLORE</p>
-        <h2 class="text-3xl md:text-4xl font-extrabold text-white"><span>WHAT'S INSIDE</span></h2>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <a href="{{ route('public.prices') }}" class="bg-[#111111] p-6 border border-brand-border shadow-md card-hover fade-up block">
-          <i class="fa-solid fa-tags text-brand-red text-2xl mb-3"></i>
-          <div class="text-white font-bold">Prices</div>
-          <div class="text-gray-400 text-xs mt-1">Tourist & local membership plans</div>
-        </a>
-        <a href="{{ route('public.about') }}" class="bg-[#111111] p-6 border border-brand-border shadow-md card-hover fade-up block">
-          <i class="fa-solid fa-circle-info text-brand-red text-2xl mb-3"></i>
-          <div class="text-white font-bold">About</div>
-          <div class="text-gray-400 text-xs mt-1">Who we are and what we stand for</div>
-        </a>
-        <a href="{{ route('public.coaches') }}" class="bg-[#111111] p-6 border border-brand-border shadow-md card-hover fade-up block">
-          <i class="fa-solid fa-user-tie text-brand-red text-2xl mb-3"></i>
-          <div class="text-white font-bold">Coaches</div>
-          <div class="text-gray-400 text-xs mt-1">Meet Rico, our head coach</div>
-        </a>
-        <a href="{{ route('public.gallery') }}" class="bg-[#111111] p-6 border border-brand-border shadow-md card-hover fade-up block">
-          <i class="fa-solid fa-images text-brand-red text-2xl mb-3"></i>
-          <div class="text-white font-bold">Gallery</div>
-          <div class="text-gray-400 text-xs mt-1">Inside the camp</div>
-        </a>
-      </div>
-      <div class="text-center mt-10 fade-up">
-        <a href="{{ route('public.contact') }}" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
-          <i class="fa-solid fa-envelope"></i> GET IN TOUCH
-        </a>
-      </div>
+<section class="py-20 bg-gray-50 dark:bg-brand-dark transition-colors duration-300">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="section-heading mb-12 fade-up text-center">
+      <p class="text-brand-red text-xs font-bold tracking-widest mb-2">EXPLORE</p>
+      <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white transition-colors duration-300"><span>WHAT'S INSIDE</span></h2>
     </div>
-  </section>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <a href="{{ route('public.prices') }}" class="bg-white dark:bg-[#111111] p-6 border border-gray-200 dark:border-brand-border shadow-md card-hover fade-up block transition-colors duration-300">
+        <i class="fa-solid fa-tags text-brand-red text-2xl mb-3"></i>
+        <div class="text-gray-900 dark:text-white font-bold transition-colors duration-300">Prices</div>
+        <div class="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300">Tourist & local membership plans</div>
+      </a>
+      <a href="{{ route('public.about') }}" class="bg-white dark:bg-[#111111] p-6 border border-gray-200 dark:border-brand-border shadow-md card-hover fade-up block transition-colors duration-300">
+        <i class="fa-solid fa-circle-info text-brand-red text-2xl mb-3"></i>
+        <div class="text-gray-900 dark:text-white font-bold transition-colors duration-300">About</div>
+        <div class="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300">Who we are and what we stand for</div>
+      </a>
+      <a href="{{ route('public.coaches') }}" class="bg-white dark:bg-[#111111] p-6 border border-gray-200 dark:border-brand-border shadow-md card-hover fade-up block transition-colors duration-300">
+        <i class="fa-solid fa-user-tie text-brand-red text-2xl mb-3"></i>
+        <div class="text-gray-900 dark:text-white font-bold transition-colors duration-300">Coaches</div>
+        <div class="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300">Meet Rico, our head coach</div>
+      </a>
+      <a href="{{ route('public.gallery') }}" class="bg-white dark:bg-[#111111] p-6 border border-gray-200 dark:border-brand-border shadow-md card-hover fade-up block transition-colors duration-300">
+        <i class="fa-solid fa-images text-brand-red text-2xl mb-3"></i>
+        <div class="text-gray-900 dark:text-white font-bold transition-colors duration-300">Gallery</div>
+        <div class="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300">Inside the camp</div>
+      </a>
+    </div>
+    <div class="text-center mt-10 fade-up">
+      <a href="{{ route('public.contact') }}" class="btn-red px-8 py-3 font-bold text-sm tracking-widest shadow-md inline-flex items-center gap-2">
+        <i class="fa-solid fa-envelope"></i> GET IN TOUCH
+      </a>
+    </div>
+  </div>
+</section>
+
 </main>
 @endsection
 

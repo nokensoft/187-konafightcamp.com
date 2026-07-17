@@ -120,7 +120,6 @@
     html:not(.dark) .bg-brand-card   { background:#f0f0f0 !important; }
     html:not(.dark) .bg-\[#0a0a0a\] { background:#ebebeb !important; }
     html:not(.dark) .bg-\[#111111\] { background:#e4e4e4 !important; }
-
     /* ── Borders ── */
     html:not(.dark) .border-brand-border { border-color:#d4d4d4 !important; }
 
@@ -136,6 +135,10 @@
     html:not(.dark) .btn-dark       { background:#e8e8e8; color:#111; border-color:#bbb; }
     html:not(.dark) .btn-dark:hover { border-color:var(--red); color:#111; }
     html:not(.dark) .price-card     { background:#e4e4e4; }
+
+    /* ── Table thead ── */
+    .thead-table                     { background:#1a1a1a; }
+    html:not(.dark) .thead-table     { background:#d4d4d4 !important; color:#111 !important; }
 
     /* ── Scrollbar ── */
     html:not(.dark) ::-webkit-scrollbar-track { background:#f0f0f0; }
